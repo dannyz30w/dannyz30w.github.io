@@ -906,7 +906,7 @@ export const conditions: Condition[] = [
   {
     id: 'diabetes_type2',
     name: 'Type 2 Diabetes',
-    description: 'A chronic condition affecting how the body metabolizes sugar (glucose), the body's main source of fuel.',
+    description: 'A chronic condition affecting how the body metabolizes sugar (glucose), the body\'s main source of fuel.',
     symptoms: ['increased_thirst', 'frequent_urination', 'increased_hunger', 'fatigue', 'blurred_vision', 'slow_healing_wounds', 'frequent_infections', 'dark_skin_patches'],
     riskFactors: {
       age: { min: 35, max: 120 },
