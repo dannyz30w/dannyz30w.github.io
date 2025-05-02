@@ -520,7 +520,7 @@ export const conditions: Condition[] = [
       'Low-fat diet',
       'Gradual weight loss if overweight',
       'Regular physical activity',
-      'Medications to dissolve gallstones if surgery isn't possible'
+      'Medications to dissolve gallstones if surgery isn\'t possible'
     ],
     seekMedicalAttention: 'within24Hours'
   },
@@ -707,7 +707,7 @@ export const conditions: Condition[] = [
       'Wear a medical alert bracelet',
       'Avoid known seizure triggers',
       'Regular medical check-ups',
-      'Consider vagus nerve stimulation if medications aren't effective'
+      'Consider vagus nerve stimulation if medications aren\'t effective'
     ],
     seekMedicalAttention: 'within24Hours'
   },
