@@ -10,7 +10,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-gradient-to-r from-primary/10 to-secondary/10 shadow-lg py-4 px-6 sticky top-0 z-50">
+    <header className="bg-gradient-to-r from-primary/10 to-secondary/10 shadow-lg py-4 px-6 sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-full shadow-md">
@@ -46,7 +46,7 @@ const Header: React.FC = () => {
       
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden mt-4 py-4 px-6 bg-white rounded-lg shadow-lg animate-fade-in">
+        <div className="md:hidden mt-4 py-4 px-6 bg-white rounded-lg shadow-lg absolute w-full left-0 right-0 animate-fade-in">
           <nav className="flex flex-col space-y-4">
             <a href="#" className="text-gray-700 hover:text-primary transition-colors font-medium py-2 border-b border-gray-100" onClick={toggleMenu}>
               Home
