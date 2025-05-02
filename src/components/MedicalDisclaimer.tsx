@@ -5,14 +5,14 @@ import { AlertTriangle } from 'lucide-react';
 
 const MedicalDisclaimer: React.FC = () => {
   return (
-    <Alert className="bg-medical-light border-l-4 border-medical-text my-6 shadow-md rounded-lg" id="disclaimer">
+    <Alert className="bg-primary/5 border-l-4 border-primary my-6 shadow-md rounded-xl" id="disclaimer">
       <div className="flex items-start">
-        <AlertTriangle className="h-6 w-6 text-medical-text mr-3 mt-0.5 flex-shrink-0" />
+        <AlertTriangle className="h-6 w-6 text-primary mr-3 mt-0.5 flex-shrink-0" />
         <div>
-          <AlertTitle className="text-medical-text font-heading text-xl mb-2">Important Medical Disclaimer</AlertTitle>
+          <AlertTitle className="text-primary font-heading text-xl mb-2">Important Medical Disclaimer</AlertTitle>
           <AlertDescription className="text-gray-700 space-y-3">
             <p className="leading-relaxed">
-              The content provided by Ailment Aid Finder is for <span className="font-semibold">informational purposes only</span> and is not intended to be a 
+              The content provided by Health Compass is for <span className="font-semibold">informational purposes only</span> and is not intended to be a 
               substitute for professional medical advice, diagnosis, or treatment.
             </p>
             <p className="leading-relaxed">

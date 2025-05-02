@@ -7,18 +7,18 @@ import MedicalDisclaimer from '@/components/MedicalDisclaimer';
 
 const Index = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-grow medical-container py-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 md:px-6 py-8">
         <section className="mb-10">
-          <div className="text-center max-w-2xl mx-auto">
-            <h1 className="text-3xl md:text-4xl font-bold text-medical-text mb-4">
-              Ailment Aid Finder
+          <div className="text-center max-w-2xl mx-auto slide-in">
+            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+              Health Compass
             </h1>
-            <p className="text-gray-600 text-lg">
-              A tool to help identify potential health conditions based on your symptoms.
-              Get personalized recommendations and guidance on when to seek medical attention.
+            <p className="text-gray-600 text-lg md:text-xl">
+              Navigate your health journey with confidence. Identify potential health concerns based on your symptoms
+              and get personalized guidance.
             </p>
           </div>
         </section>
@@ -29,13 +29,13 @@ const Index = () => {
           <SymptomChecker />
         </section>
         
-        <section id="about" className="mt-16 px-4 py-10 bg-white rounded-lg shadow">
+        <section id="about" className="mt-16 px-4 py-10 bg-white rounded-xl shadow-md">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-medical-text mb-4">
-              About This Tool
+            <h2 className="text-2xl font-bold text-primary mb-4">
+              About Health Compass
             </h2>
             <p className="text-gray-600 mb-4">
-              Ailment Aid Finder uses information about your symptoms and personal details to suggest 
+              Health Compass uses information about your symptoms and personal details to suggest 
               potential health conditions that might match your situation.
             </p>
             <p className="text-gray-600 mb-4">
