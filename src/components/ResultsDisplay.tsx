@@ -1,289 +1,271 @@
 
-import React, { useState } from 'react';
-import { Condition } from '@/data/conditions';
-import { getSeverityColor, getMedicalAttentionText, getMedicalAttentionColor } from '@/utils/symptomMatcher';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Ambulance, ChevronDown, ChevronUp, Share2, Printer, AlertTriangle, Info } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useEffect, useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSymptomById } from '@/data/symptoms';
-import { useToast } from '@/components/ui/use-toast';
+import { Condition } from '@/data/conditions';
+import { getMedicalAttentionText, getMedicalAttentionColor, getSeverityColor } from '@/utils/symptomMatcher';
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper } from 'lucide-react';
+import HealthNews from './HealthNews';
 
 interface ResultsDisplayProps {
   results: {
     condition: Condition;
     matchScore: number;
   }[];
+  userData: any;
   onReset: () => void;
 }
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => {
-  const { toast } = useToast();
-  const [expandedConditions, setExpandedConditions] = useState<string[]>([]);
-  
-  const hasEmergencyCondition = results.some(
-    result => result.condition.seekMedicalAttention === 'immediately' && result.matchScore > 60
-  );
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onReset }) => {
+  const [expandedCondition, setExpandedCondition] = useState<string | null>(null);
+  const [selectedNewsCondition, setSelectedNewsCondition] = useState<Condition | null>(null);
+  const [showNews, setShowNews] = useState(false);
 
-  const hasUrgentCondition = results.some(
-    result => result.condition.seekMedicalAttention === 'within24Hours' && result.matchScore > 70
-  );
-
-  const toggleConditionExpansion = (conditionId: string) => {
-    setExpandedConditions(prev => 
-      prev.includes(conditionId) 
-        ? prev.filter(id => id !== conditionId) 
-        : [...prev, conditionId]
-    );
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Ailment Aid Finder Results',
-        text: 'Check out my symptom analysis results from Ailment Aid Finder',
-        url: window.location.href,
-      })
-      .catch(() => {
-        toast({
-          title: "Sharing not available",
-          description: "Couldn't share the results. Try copying the URL manually.",
-        });
-      });
-    } else {
-      toast({
-        title: "Sharing not supported",
-        description: "Your browser doesn't support the Web Share API.",
-      });
+  useEffect(() => {
+    // If there are results, expand the first one by default
+    if (results.length > 0) {
+      setExpandedCondition(results[0].condition.id);
     }
+  }, [results]);
+
+  const toggleConditionExpanded = (conditionId: string) => {
+    setExpandedCondition(prev => prev === conditionId ? null : conditionId);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const getSeverityBadge = (severity: Condition['severity']) => {
-    let bgColor = '';
-    let textColor = '';
+  const showNewsFor = (condition: Condition) => {
+    setSelectedNewsCondition(condition);
+    setShowNews(true);
     
-    switch(severity) {
-      case 'mild':
-        bgColor = 'bg-green-100';
-        textColor = 'text-green-800';
-        break;
-      case 'moderate':
-        bgColor = 'bg-yellow-100';
-        textColor = 'text-yellow-800';
-        break;
-      case 'severe':
-        bgColor = 'bg-red-100';
-        textColor = 'text-red-800';
-        break;
-    }
-    
-    return (
-      <Badge className={`${bgColor} ${textColor} border-0`}>
-        {severity.charAt(0).toUpperCase() + severity.slice(1)}
-      </Badge>
-    );
+    // Scroll to news section
+    setTimeout(() => {
+      document.getElementById('health-news-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   return (
-    <div className="space-y-6 slide-in max-w-4xl mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-medical-text mb-2">Analysis Results</h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Based on your symptoms and information, these conditions might match your situation. Remember that this is not a diagnosis - consult with a healthcare professional for proper evaluation.
-        </p>
+    <div className="max-w-4xl mx-auto animate-fade-in">
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-medical-text mb-3">Symptom Analysis Results</h2>
+        <p className="text-gray-600">Based on the information you provided, here are potential conditions that may match your symptoms</p>
       </div>
 
-      <div className="flex justify-end space-x-2 print:hidden">
-        <Button variant="outline" onClick={handleShare} className="flex items-center gap-1">
-          <Share2 className="h-4 w-4" />
-          <span>Share</span>
-        </Button>
-        <Button variant="outline" onClick={handlePrint} className="flex items-center gap-1">
-          <Printer className="h-4 w-4" />
-          <span>Print</span>
-        </Button>
-      </div>
+      <Alert className="mb-6 bg-medical-light/30 border-medical-light">
+        <AlertTriangle className="h-4 w-4 text-medical-text" />
+        <AlertTitle className="text-medical-text font-medium">Important Medical Disclaimer</AlertTitle>
+        <AlertDescription className="text-gray-700">
+          This information is for educational purposes only and is not a substitute for professional medical advice.
+          Always consult with a qualified healthcare provider for proper diagnosis and treatment.
+        </AlertDescription>
+      </Alert>
 
-      {hasEmergencyCondition && (
-        <Alert className="border-medical-danger bg-red-50 mb-6 border-l-4 shadow-md">
-          <div className="flex items-start">
-            <Ambulance className="h-6 w-6 text-medical-danger mr-3 mt-0.5 flex-shrink-0" />
-            <AlertDescription className="text-medical-danger font-semibold text-base">
-              Based on your symptoms, you may need <span className="font-bold">immediate medical attention</span>. 
-              Please call emergency services (911) or go to the nearest emergency room right away.
-            </AlertDescription>
-          </div>
-        </Alert>
-      )}
-
-      {hasUrgentCondition && !hasEmergencyCondition && (
-        <Alert className="border-medical-warning bg-amber-50 mb-6 border-l-4 shadow-md">
-          <div className="flex items-start">
-            <AlertTriangle className="h-6 w-6 text-medical-warning mr-3 mt-0.5 flex-shrink-0" />
-            <AlertDescription className="text-medical-warning font-semibold text-base">
-              Your symptoms suggest a condition that may require prompt medical attention. 
-              Consider seeking care within the next 24 hours.
-            </AlertDescription>
-          </div>
-        </Alert>
-      )}
-
-      {results.length === 0 ? (
-        <div className="text-center p-10 border rounded-lg bg-gray-50">
-          <h3 className="text-xl font-semibold text-gray-700">No Matching Conditions Found</h3>
-          <p className="mt-2 text-gray-600">
-            We couldn't find conditions that closely match your symptoms. Please consult a healthcare 
-            professional for proper diagnosis as your symptoms may still indicate a health concern.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {results.map((result) => (
-            <Card key={result.condition.id} className="border-l-4 overflow-hidden shadow-md hover:shadow-lg transition-shadow" style={{ 
-              borderLeftColor: 
-                result.condition.seekMedicalAttention === 'immediately' ? '#ef5350' :
-                result.condition.seekMedicalAttention === 'within24Hours' ? '#ffa726' :
-                result.condition.seekMedicalAttention === 'withinWeek' ? '#ffee58' : 
-                '#4caf50'
-            }}>
-              <CardHeader className="pb-2">
+      <div className="space-y-6">
+        {results.length > 0 ? (
+          results.map(({ condition, matchScore }) => {
+            const isExpanded = expandedCondition === condition.id;
+            const matchedSymptoms = condition.symptoms.filter(s => userData.symptoms.includes(s));
+            const unmatchedSymptoms = condition.symptoms.filter(s => !userData.symptoms.includes(s));
+            const familyHistoryMatch = userData.familyHistory && userData.familyHistory.some(history => 
+              condition.name.toLowerCase().includes(history.toLowerCase())
+            );
+            
+            // Apply family history bonus for UI display
+            const displayScore = Math.min(100, familyHistoryMatch ? matchScore + 5 : matchScore);
+            
+            return (
+              <Card key={condition.id} className={`overflow-hidden border-l-4 transition-all duration-300 ${isExpanded ? "shadow-md" : ""} ${
+                displayScore > 75 ? "border-l-medical-danger" : displayScore > 50 ? "border-l-medical-warning" : "border-l-medical"
+              }`}>
                 <div 
-                  className="flex justify-between items-start cursor-pointer"
-                  onClick={() => toggleConditionExpansion(result.condition.id)}
+                  className={`p-4 flex justify-between items-center cursor-pointer ${isExpanded ? "bg-gray-50" : ""}`}
+                  onClick={() => toggleConditionExpanded(condition.id)}
                 >
-                  <div>
-                    <CardTitle className="text-xl font-bold text-medical-text flex items-center">
-                      {result.condition.name}
-                    </CardTitle>
-                    <CardDescription className="mt-1 flex items-center space-x-2">
-                      <span>Match: <strong className="text-medical-text">{result.matchScore}%</strong></span>
-                      {getSeverityBadge(result.condition.severity)}
-                    </CardDescription>
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                    <h3 className="text-lg font-semibold">{condition.name}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className={`${getSeverityColor(condition.severity)} bg-opacity-15`}>
+                        {condition.severity.charAt(0).toUpperCase() + condition.severity.slice(1)} Severity
+                      </Badge>
+                      {familyHistoryMatch && (
+                        <Badge className="bg-purple-100 text-purple-700 border border-purple-300">Family History</Badge>
+                      )}
+                      {userData.symptoms.length > 0 && (
+                        <Badge className="bg-gray-100 text-gray-700 border border-gray-300">
+                          {matchedSymptoms.length}/{condition.symptoms.length} Symptoms Match
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  {expandedConditions.includes(result.condition.id) ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
-                  )}
-                </div>
-              </CardHeader>
-              
-              {/* Card content is always visible */}
-              <CardContent className="pt-0">
-                <p className="text-gray-600 mb-4">{result.condition.description}</p>
-                
-                <div className={`${expandedConditions.includes(result.condition.id) ? '' : 'hidden'}`}>
-                  <Tabs defaultValue="symptoms" className="mt-4">
-                    <TabsList className="grid grid-cols-3">
-                      <TabsTrigger value="symptoms">Symptoms</TabsTrigger>
-                      <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
-                      <TabsTrigger value="details">Details</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="symptoms" className="pt-4">
-                      <h4 className="font-semibold text-medical-text mb-2">Common symptoms:</h4>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {result.condition.symptoms.map(symptomId => {
-                          const symptom = getSymptomById(symptomId);
-                          return symptom ? (
-                            <Badge key={symptomId} variant="outline" className="bg-medical-light border-0">
-                              {symptom.name}
-                            </Badge>
-                          ) : (
-                            <Badge key={symptomId} variant="outline" className="bg-medical-light border-0">
-                              {symptomId.replace(/_/g, ' ')}
-                            </Badge>
-                          );
-                        })}
+                  <div className="flex items-center gap-3">
+                    <div className="hidden md:flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          showNewsFor(condition);
+                        }}
+                        className="text-xs bg-white"
+                      >
+                        <Newspaper className="h-3 w-3 mr-1" />
+                        Recent News
+                      </Button>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className={`text-lg font-bold ${
+                        displayScore > 75 ? "text-medical-danger" : 
+                        displayScore > 50 ? "text-medical-warning" : 
+                        "text-medical-text"
+                      }`}>
+                        {displayScore}%
                       </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="recommendations" className="pt-4">
-                      <h4 className="font-semibold text-medical-text mb-2">Recommendations:</h4>
-                      <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                        {result.condition.recommendations.map((recommendation, index) => (
-                          <li key={index}>{recommendation}</li>
-                        ))}
-                      </ul>
-                    </TabsContent>
-                    
-                    <TabsContent value="details" className="pt-4">
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-medical-text mb-1">Risk Factors:</h4>
-                          <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                            {result.condition.riskFactors.age && (
-                              <li>
-                                Age: {result.condition.riskFactors.age.min !== undefined ? result.condition.riskFactors.age.min : 'Any'} 
-                                {result.condition.riskFactors.age.max !== undefined ? ` to ${result.condition.riskFactors.age.max}` : '+'} years
-                              </li>
-                            )}
-                            {result.condition.riskFactors.gender && (
-                              <li>
-                                Gender: {result.condition.riskFactors.gender === 'any' ? 'All genders' : 
-                                  result.condition.riskFactors.gender === 'male' ? 'More common in males' : 
-                                  'More common in females'}
-                              </li>
-                            )}
-                            {result.condition.riskFactors.regions && result.condition.riskFactors.regions.length > 0 && (
-                              <li>
-                                Regions: {result.condition.riskFactors.regions.join(', ')}
-                              </li>
-                            )}
-                          </ul>
+                      <div className="text-xs text-gray-500">Match</div>
+                    </div>
+                    {isExpanded ? 
+                      <ChevronUp className="h-5 w-5 text-gray-400" /> : 
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    }
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <CardContent className="bg-gray-50 border-t border-gray-100 p-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-semibold text-gray-700 mb-2">Description</h4>
+                        <p className="text-gray-600 text-sm leading-relaxed">{condition.description}</p>
+                        
+                        <div className="mt-4">
+                          <h4 className="font-semibold text-gray-700 mb-2">Medical Attention</h4>
+                          <Badge 
+                            className={`${getMedicalAttentionColor(condition.seekMedicalAttention)} text-white`}
+                          >
+                            {getMedicalAttentionText(condition.seekMedicalAttention)}
+                          </Badge>
                         </div>
                         
-                        <div>
-                          <h4 className="font-semibold text-medical-text mb-1">Severity Level:</h4>
-                          <p className="text-gray-600">
-                            This condition is generally classified as 
-                            <span className={`font-medium ${getSeverityColor(result.condition.severity)}`}>
-                              {' ' + result.condition.severity}
-                            </span>.
-                          </p>
+                        <div className="mt-6">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation(); 
+                              showNewsFor(condition);
+                            }}
+                            className="md:hidden text-xs"
+                          >
+                            <Newspaper className="h-3 w-3 mr-1" />
+                            See Recent News
+                          </Button>
                         </div>
                       </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              </CardContent>
-              
-              <CardFooter className="border-t pt-4 flex flex-col items-start">
-                <div className={`text-white px-3 py-1.5 rounded-full text-sm font-medium ${getMedicalAttentionColor(result.condition.seekMedicalAttention)}`}>
-                  {getMedicalAttentionText(result.condition.seekMedicalAttention)}
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+
+                      <div>
+                        <h4 className="font-semibold text-gray-700 mb-2">Matching Symptoms</h4>
+                        <div className="grid grid-cols-1 gap-2">
+                          {matchedSymptoms.length > 0 ? (
+                            matchedSymptoms.map(symptomId => {
+                              const symptom = getSymptomById(symptomId);
+                              return symptom ? (
+                                <div key={symptomId} className="flex items-start space-x-2">
+                                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                                  <div>
+                                    <span className="text-sm text-gray-700">{symptom.name}</span>
+                                    {symptom.description && (
+                                      <p className="text-xs text-gray-500">{symptom.description}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : null;
+                            })
+                          ) : (
+                            <p className="text-sm text-gray-500">No matching symptoms found.</p>
+                          )}
+                        </div>
+
+                        {unmatchedSymptoms.length > 0 && (
+                          <>
+                            <h4 className="font-semibold text-gray-700 mt-4 mb-2">Other Common Symptoms</h4>
+                            <div className="grid grid-cols-1 gap-2">
+                              {unmatchedSymptoms.slice(0, 5).map(symptomId => {
+                                const symptom = getSymptomById(symptomId);
+                                return symptom ? (
+                                  <div key={symptomId} className="flex items-start space-x-2">
+                                    <AlertCircle className="h-4 w-4 text-gray-400 mt-0.5" />
+                                    <span className="text-sm text-gray-500">{symptom.name}</span>
+                                  </div>
+                                ) : null;
+                              })}
+                              {unmatchedSymptoms.length > 5 && (
+                                <div className="text-sm text-gray-500 italic">
+                                  + {unmatchedSymptoms.length - 5} more symptoms
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-5 pt-4 border-t border-gray-200">
+                      <h4 className="font-semibold text-gray-700 mb-2">Prevention & Management</h4>
+                      {condition.preventionTips ? (
+                        <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
+                          {condition.preventionTips.map((tip, index) => (
+                            <li key={index}>{tip}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500">No specific prevention tips available for this condition.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })
+        ) : (
+          <Card className="p-6 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <AlertCircle className="h-12 w-12 text-gray-400" />
+              <h3 className="text-xl font-semibold text-gray-700">No Matches Found</h3>
+              <p className="text-gray-600 max-w-md">
+                Based on the information you provided, we couldn't find any conditions that match your symptoms.
+                Consider adding more symptoms or details for better results.
+              </p>
+            </div>
+          </Card>
+        )}
+      </div>
+
+      {showNews && selectedNewsCondition && (
+        <div id="health-news-section" className="mt-10">
+          <Card>
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-medical-text">Recent Health News: {selectedNewsCondition.name}</h3>
+                <Button variant="ghost" size="sm" onClick={() => setShowNews(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <HealthNews condition={selectedNewsCondition.name} />
+            </CardContent>
+          </Card>
         </div>
       )}
-      
-      <div className="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
-        <div className="flex items-start space-x-3">
-          <Info className="h-5 w-5 text-medical-text mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-medical-text">Important Information</h3>
-            <p className="text-gray-600 text-sm mt-1">
-              These results are based on the information you provided and are intended for informational purposes only.
-              Always consult with a qualified healthcare professional for proper diagnosis and treatment.
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex justify-center mt-8 print:hidden">
-        <Button 
+
+      <div className="mt-8 flex justify-center">
+        <Button
           onClick={onReset}
-          className="bg-medical-text hover:bg-medical-dark text-white px-8"
-          size="lg"
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-2"
         >
-          Check Different Symptoms
+          Start New Analysis
         </Button>
       </div>
     </div>

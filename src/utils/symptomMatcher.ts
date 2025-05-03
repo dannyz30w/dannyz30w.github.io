@@ -7,6 +7,13 @@ interface UserData {
   location: string;
   symptoms: string[];
   duration: number;
+  familyHistory?: string[];
+  additionalInfo?: string;
+  medications?: string[];
+  allergies?: string[];
+  weight?: string;
+  height?: string;
+  pastMedicalConditions?: string[];
 }
 
 export function matchConditions(userData: UserData, conditionsList: Condition[]): {
@@ -44,6 +51,31 @@ export function matchConditions(userData: UserData, conditionsList: Condition[])
       score -= 10; // Reduce score for mild conditions if symptoms persisted long
     } else if (userData.duration < 2 && condition.severity === 'severe') {
       score -= 5; // Slightly reduce score for severe conditions if symptoms just started
+    }
+    
+    // Family history match bonus (up to 10 extra points)
+    if (userData.familyHistory && userData.familyHistory.length > 0) {
+      const familyHistoryMatch = userData.familyHistory.some(historyItem => 
+        condition.name.toLowerCase().includes(historyItem.toLowerCase()) ||
+        (condition.description && condition.description.toLowerCase().includes(historyItem.toLowerCase()))
+      );
+      
+      if (familyHistoryMatch) {
+        score += 10;
+      }
+    }
+    
+    // Past medical conditions consideration
+    if (userData.pastMedicalConditions && userData.pastMedicalConditions.length > 0) {
+      const relatedConditionMatch = userData.pastMedicalConditions.some(pastCondition => {
+        const pastConditionLower = pastCondition.toLowerCase();
+        return condition.name.toLowerCase().includes(pastConditionLower) ||
+               (condition.relatedConditions && condition.relatedConditions.some(rc => rc.toLowerCase().includes(pastConditionLower)));
+      });
+      
+      if (relatedConditionMatch) {
+        score += 5;
+      }
     }
     
     // Only return conditions with a reasonable match
