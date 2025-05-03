@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -208,7 +207,7 @@ const SymptomChecker: React.FC = () => {
       toast({
         title: "No matches found",
         description: "Try adding more symptoms or details for better results.",
-        variant: "warning",
+        variant: "destructive",
       });
     }
     
