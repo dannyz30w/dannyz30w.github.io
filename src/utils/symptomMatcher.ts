@@ -20,11 +20,16 @@ export function matchConditions(userData: UserData, conditionsList: Condition[])
   condition: Condition,
   matchScore: number
 }[] {
-  const results = conditionsList.map(condition => {
+  const results = conditionsList.map((condition, index) => {
     let score = 0;
     const symptomMatchCount = condition.symptoms.filter(symptom => 
       userData.symptoms.includes(symptom)
     ).length;
+    
+    // If no symptoms match, return null immediately
+    if (symptomMatchCount === 0) {
+      return null;
+    }
     
     // Calculate symptom match percentage
     const symptomPercentage = condition.symptoms.length > 0 
@@ -35,13 +40,13 @@ export function matchConditions(userData: UserData, conditionsList: Condition[])
     score += symptomPercentage * 70;
     
     // Age match (up to 15 points)
-    const ageMatch = condition.riskFactors.age 
+    const ageMatch = condition.riskFactors?.age 
       ? isAgeInRange(userData.age, condition.riskFactors.age) 
       : true;
     if (ageMatch) score += 15;
     
     // Gender match (up to 15 points)
-    const genderMatch = condition.riskFactors.gender 
+    const genderMatch = condition.riskFactors?.gender 
       ? condition.riskFactors.gender === userData.gender || condition.riskFactors.gender === 'any' 
       : true;
     if (genderMatch) score += 15;
@@ -87,8 +92,12 @@ export function matchConditions(userData: UserData, conditionsList: Condition[])
     return null;
   }).filter(Boolean) as { condition: Condition, matchScore: number }[];
   
-  // Sort by match score (highest first)
-  return results.sort((a, b) => b.matchScore - a.matchScore);
+  // Sort by match score (highest first) and ensure no duplicate conditions
+  const uniqueResults = Array.from(new Map(results.map(item => 
+    [item.condition.id, item]
+  )).values());
+  
+  return uniqueResults.sort((a, b) => b.matchScore - a.matchScore);
 }
 
 function isAgeInRange(age: number, range: {min?: number, max?: number}): boolean {

@@ -9,8 +9,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSymptomById } from '@/data/symptoms';
 import { Condition } from '@/data/conditions';
 import { getMedicalAttentionText, getMedicalAttentionColor, getSeverityColor } from '@/utils/symptomMatcher';
-import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X, Search } from 'lucide-react';
 import HealthNews from './HealthNews';
+import { Input } from "./ui/input";
 
 interface ResultsDisplayProps {
   results: {
@@ -25,6 +26,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
   const [expandedCondition, setExpandedCondition] = useState<string | null>(null);
   const [selectedNewsCondition, setSelectedNewsCondition] = useState<Condition | null>(null);
   const [showNews, setShowNews] = useState(false);
+  const [newsSearchQuery, setNewsSearchQuery] = useState('');
 
   useEffect(() => {
     // If there are results, expand the first one by default
@@ -40,6 +42,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
   const showNewsFor = (condition: Condition) => {
     setSelectedNewsCondition(condition);
     setShowNews(true);
+    setNewsSearchQuery(condition.name);
     
     // Scroll to news section
     setTimeout(() => {
@@ -65,7 +68,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
 
       <div className="space-y-6">
         {results.length > 0 ? (
-          results.map(({ condition, matchScore }) => {
+          results.map(({ condition, matchScore }, index) => {
             const isExpanded = expandedCondition === condition.id;
             const matchedSymptoms = condition.symptoms.filter(s => userData.symptoms.includes(s));
             const unmatchedSymptoms = condition.symptoms.filter(s => !userData.symptoms.includes(s));
@@ -77,7 +80,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
             const displayScore = Math.min(100, familyHistoryMatch ? matchScore + 5 : matchScore);
             
             return (
-              <Card key={condition.id} className={`overflow-hidden border-l-4 transition-all duration-300 ${isExpanded ? "shadow-md" : ""} ${
+              <Card key={`${condition.id}-${index}`} className={`overflow-hidden border-l-4 transition-all duration-300 ${isExpanded ? "shadow-md" : ""} ${
                 displayScore > 75 ? "border-l-medical-danger" : displayScore > 50 ? "border-l-medical-warning" : "border-l-medical"
               }`}>
                 <div 
@@ -242,19 +245,32 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
         )}
       </div>
 
-      {showNews && selectedNewsCondition && (
+      {showNews && (
         <div id="health-news-section" className="mt-10">
           <Card>
             <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-medical-text">Recent Health News: {selectedNewsCondition.name}</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowNews(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-medical-text">
+                    Health News: {selectedNewsCondition?.name}
+                  </h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowNews(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search health topics..."
+                    value={newsSearchQuery}
+                    onChange={(e) => setNewsSearchQuery(e.target.value)}
+                    className="pl-10 bg-white"
+                  />
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-4">
-              <HealthNews condition={selectedNewsCondition.name} />
+              <HealthNews condition={newsSearchQuery || selectedNewsCondition?.name || ''} />
             </CardContent>
           </Card>
         </div>

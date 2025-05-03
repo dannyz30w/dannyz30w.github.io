@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SymptomChecker from '@/components/SymptomChecker';
@@ -8,18 +8,6 @@ import NewsSection from '@/components/NewsSection';
 import AIChat from '@/components/AIChat';
 
 const Index = () => {
-  useEffect(() => {
-    const openChatButtons = document.querySelectorAll('#open-chat, #open-chat-mobile');
-    openChatButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const chatWidget = document.querySelector('#ai-chat-widget') as HTMLElement;
-        if (chatWidget) {
-          chatWidget.classList.toggle('hidden');
-        }
-      });
-    });
-  }, []);
-  
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />

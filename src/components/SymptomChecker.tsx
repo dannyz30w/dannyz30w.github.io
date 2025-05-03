@@ -52,13 +52,16 @@ const SymptomChecker: React.FC = () => {
   const [medicationInput, setMedicationInput] = useState('');
   const [allergyInput, setAllergyInput] = useState('');
   const [conditionInput, setConditionInput] = useState('');
+  const [seenSymptomIds, setSeenSymptomIds] = useState(new Set<string>());
 
-  // Search symptom functionality
+  // Search symptom functionality with deduplication
   const filteredSymptoms = useMemo(() => {
     if (!searchQuery && !selectedCategory) {
       return null;
     }
-
+    
+    setSeenSymptomIds(new Set<string>());
+    
     return allSymptoms.filter((symptom) => {
       const matchesSearch = searchQuery 
         ? symptom.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -178,14 +181,17 @@ const SymptomChecker: React.FC = () => {
       return;
     }
     
-    if (!userData.age || !userData.gender || !userData.duration) {
+    if (!userData.age || !userData.gender) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all required fields.",
+        title: "Missing required information",
+        description: "Please enter your age and gender to proceed.",
         variant: "destructive",
       });
       return;
     }
+    
+    // Default duration if not selected
+    const duration = userData.duration || 3;
     
     // Process the form data
     const matchedConditions = matchConditions(
@@ -193,10 +199,18 @@ const SymptomChecker: React.FC = () => {
         ...userData,
         age: parseInt(userData.age),
         gender: userData.gender as 'male' | 'female' | 'other',
-        duration: parseInt(userData.duration.toString()),
+        duration: duration,
       },
       conditions
     );
+    
+    if (matchedConditions.length === 0) {
+      toast({
+        title: "No matches found",
+        description: "Try adding more symptoms or details for better results.",
+        variant: "warning",
+      });
+    }
     
     setResults(matchedConditions);
     setStep(2);
@@ -284,6 +298,46 @@ const SymptomChecker: React.FC = () => {
     ];
   }, []);
 
+  // Helper function to prevent duplicate symptoms in search results
+  const renderUniqueSymptoms = (symptoms: typeof allSymptoms) => {
+    const uniqueSymptoms = new Set<string>();
+    
+    return symptoms.map((symptom) => {
+      // Skip if we've seen this symptom id before
+      if (uniqueSymptoms.has(symptom.id)) {
+        return null;
+      }
+      
+      // Mark as seen
+      uniqueSymptoms.add(symptom.id);
+      
+      return (
+        <div key={symptom.id} className="flex items-center space-x-2 bg-white p-2 rounded-md border border-gray-100 hover:border-medical-light transition-colors">
+          <Checkbox
+            id={`search-${symptom.id}`}
+            checked={userData.symptoms.includes(symptom.id)}
+            onCheckedChange={() => handleSymptomToggle(symptom.id)}
+            className="text-medical-text border-gray-400"
+          />
+          <div className="flex-1">
+            <Label
+              htmlFor={`search-${symptom.id}`}
+              className="text-sm text-gray-700 cursor-pointer hover:text-medical-text font-medium"
+            >
+              {symptom.name}
+            </Label>
+            {symptom.description && (
+              <p className="text-xs text-gray-500 mt-0.5">{symptom.description}</p>
+            )}
+            <Badge className="mt-1 bg-gray-100 text-gray-600 hover:bg-gray-100 text-[10px]">
+              {symptomsByCategory.find(c => c.category.id === symptom.category)?.category.name || 'General'}
+            </Badge>
+          </div>
+        </div>
+      );
+    }).filter(Boolean); // Remove null items
+  };
+
   if (step === 2) {
     return <ResultsDisplay results={results} userData={userData} onReset={resetForm} />;
   }
@@ -306,7 +360,9 @@ const SymptomChecker: React.FC = () => {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="age" className="text-medical-text">Age</Label>
+                <Label htmlFor="age" className="text-medical-text flex items-center gap-1">
+                  Age <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="age"
                   type="number"
@@ -319,7 +375,9 @@ const SymptomChecker: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="gender" className="text-medical-text">Gender</Label>
+                <Label htmlFor="gender" className="text-medical-text flex items-center gap-1">
+                  Gender <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={userData.gender}
                   onValueChange={(value) => setUserData({ ...userData, gender: value })}
@@ -553,7 +611,7 @@ const SymptomChecker: React.FC = () => {
         <Card className="overflow-hidden border-medical-light shadow-md">
           <div className="bg-gradient-to-r from-medical-light to-white p-4 border-b border-medical-light flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-semibold text-medical-text">Family Medical History</h3>
+              <h3 className="text-lg font-semibold text-medical-text">Family Medical History <span className="text-sm font-normal text-gray-500">(Optional)</span></h3>
               <p className="text-sm text-gray-500">Select conditions that run in your family</p>
             </div>
             <TooltipProvider>
@@ -611,7 +669,7 @@ const SymptomChecker: React.FC = () => {
 
         <Card className="overflow-hidden border-medical-light shadow-md">
           <div className="bg-gradient-to-r from-medical-light to-white p-4 border-b border-medical-light">
-            <h3 className="text-lg font-semibold text-medical-text">Select Your Symptoms</h3>
+            <h3 className="text-lg font-semibold text-medical-text">Select Your Symptoms <span className="text-red-500">*</span></h3>
             <p className="text-sm text-gray-500">Choose all symptoms you've been experiencing</p>
           </div>
           <CardContent className="p-6">
@@ -728,30 +786,7 @@ const SymptomChecker: React.FC = () => {
                 <div className="bg-white p-4 rounded-md border border-gray-200">
                   {filteredSymptoms && filteredSymptoms.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {filteredSymptoms.map((symptom) => (
-                        <div key={symptom.id} className="flex items-center space-x-2 bg-white p-2 rounded-md border border-gray-100 hover:border-medical-light transition-colors">
-                          <Checkbox
-                            id={`search-${symptom.id}`}
-                            checked={userData.symptoms.includes(symptom.id)}
-                            onCheckedChange={() => handleSymptomToggle(symptom.id)}
-                            className="text-medical-text border-gray-400"
-                          />
-                          <div className="flex-1">
-                            <Label
-                              htmlFor={`search-${symptom.id}`}
-                              className="text-sm text-gray-700 cursor-pointer hover:text-medical-text font-medium"
-                            >
-                              {symptom.name}
-                            </Label>
-                            {symptom.description && (
-                              <p className="text-xs text-gray-500 mt-0.5">{symptom.description}</p>
-                            )}
-                            <Badge className="mt-1 bg-gray-100 text-gray-600 hover:bg-gray-100 text-[10px]">
-                              {symptomsByCategory.find(c => c.category.id === symptom.category)?.category.name}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
+                      {renderUniqueSymptoms(filteredSymptoms)}
                     </div>
                   ) : searchQuery || selectedCategory ? (
                     <div className="text-center p-6 text-gray-500">
@@ -765,6 +800,16 @@ const SymptomChecker: React.FC = () => {
                 </div>
               </TabsContent>
             </Tabs>
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="flex items-start">
+                <InfoIcon className="h-5 w-5 text-blue-500 mt-0.5 mr-2" />
+                <div>
+                  <h4 className="font-medium text-blue-700">Required Fields</h4>
+                  <p className="text-sm text-blue-600">Age, Gender, and at least one Symptom are required to analyze your symptoms. All other fields are optional but help improve accuracy.</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
