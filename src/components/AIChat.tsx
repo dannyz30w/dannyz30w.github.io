@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,13 +17,12 @@ const AIChat: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
-      content: "Hello! I'm your Health Compass AI assistant. How can I help you with your health questions today?",
+      content: "Hello! I'm your Health Compass AI assistant. I can help answer your health questions using the latest medical research. How can I help you today?",
       sender: 'assistant',
       timestamp: new Date(),
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const [recentResponses, setRecentResponses] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
@@ -36,11 +36,87 @@ const AIChat: React.FC = () => {
     setIsOpen(prev => !prev);
   };
   
-  // Helper function to check for repeated responses
-  const isRepetitiveResponse = (response: string) => {
-    return recentResponses.includes(response);
+  // Sample responses to common medical questions
+  const responses = {
+    greeting: [
+      "Hello! I'm here to help with your health questions. What would you like to know?",
+      "Hi there! How can I assist you with your health concerns today?",
+      "Welcome to Health Compass. How may I help you with your health questions?"
+    ],
+    symptoms: [
+      "Based on those symptoms, there could be several potential causes. It's important to consult with a healthcare professional for a proper diagnosis. Would you like me to provide some general information about these symptoms?",
+      "These symptoms could be associated with several conditions. While I can provide general information, a healthcare provider can give you personalized advice. Would you like me to explain some possible causes?",
+      "I understand you're experiencing these symptoms. While I can offer general insights, it's best to consult with a medical professional for proper evaluation. What specific information are you looking for?"
+    ],
+    treatment: [
+      "Treatment options typically include medication, lifestyle changes, and sometimes surgical interventions depending on the condition. A healthcare provider can recommend the most appropriate treatment plan for your specific situation.",
+      "The most effective treatment depends on your specific diagnosis, medical history, and other factors. Generally, options may include medications, physical therapy, lifestyle modifications, or in some cases, surgical procedures.",
+      "Treatment approaches vary based on diagnosis, severity, and individual factors. While I can provide general information about common treatments, your doctor can create a personalized plan."
+    ],
+    prevention: [
+      "Prevention strategies often include maintaining a balanced diet, regular physical activity, adequate sleep, stress management, and regular medical check-ups. Would you like more specific information about preventing a particular condition?",
+      "Preventive measures typically involve lifestyle factors such as nutrition, exercise, avoiding tobacco and excessive alcohol, and getting recommended screenings. Is there a specific condition you're concerned about preventing?",
+      "Many health conditions can be prevented through healthy lifestyle choices. This includes nutritious eating, regular exercise, not smoking, limiting alcohol, managing stress, and getting appropriate vaccinations and screenings."
+    ],
+    nutrition: [
+      "A balanced diet typically includes a variety of fruits, vegetables, whole grains, lean proteins, and healthy fats. Specific nutritional needs may vary based on age, sex, activity level, and health conditions. Would you like information about nutrition for a specific health concern?",
+      "Nutritional recommendations focus on whole foods like vegetables, fruits, whole grains, lean proteins, and healthy fats while limiting processed foods, added sugars, and excess sodium. Different health conditions may require specific dietary approaches.",
+      "Good nutrition involves eating a variety of foods that give you the nutrients needed to maintain health, feel good, and have energy. These nutrients include protein, carbohydrates, fat, water, vitamins, and minerals."
+    ],
+    exercise: [
+      "Regular physical activity offers numerous health benefits, including improved cardiovascular health, stronger muscles and bones, better weight management, and enhanced mental health. Adults should aim for at least 150 minutes of moderate-intensity activity per week.",
+      "Exercise recommendations typically include both aerobic activity (like walking, swimming or cycling) and strength training. The specific amount and type of exercise that's best for you depends on factors like age, health status, and fitness goals.",
+      "Physical activity benefits nearly all aspects of health. For most adults, experts recommend 150 minutes of moderate aerobic activity or 75 minutes of vigorous activity weekly, plus muscle-strengthening activities twice weekly."
+    ],
+    medications: [
+      "Medications work in different ways depending on their type and purpose. It's important to take medications as prescribed, be aware of potential side effects, and inform your healthcare provider of all medications you're taking to avoid interactions.",
+      "When taking any medication, it's important to follow your doctor's instructions carefully, be aware of possible side effects, and alert your healthcare provider to any problems. Never stop taking a medication without consulting your doctor first.",
+      "Medications can be effective when used appropriately, but all have potential benefits and risks. Always take medications as prescribed, report side effects to your doctor, and don't adjust dosage without medical guidance."
+    ],
+    mental_health: [
+      "Mental health is just as important as physical health. Common mental health conditions include depression, anxiety disorders, and stress-related conditions. Treatment often includes therapy, medication, lifestyle changes, or a combination of these approaches.",
+      "Taking care of your mental health involves seeking professional help when needed, building strong relationships, managing stress, getting enough sleep, staying physically active, and practicing mindfulness or other relaxation techniques.",
+      "Mental health affects how we think, feel, and act. It also helps determine how we handle stress, relate to others, and make choices. Mental health treatment can include counseling, therapy, medication, or a combination of approaches."
+    ],
+    research: [
+      "Medical research is constantly evolving. The most reliable information comes from peer-reviewed studies, systematic reviews, and meta-analyses. It's always good to check that health information is based on current evidence from reputable sources.",
+      "Recent medical research has made significant advances in areas like genetics, immunotherapy, and digital health technologies. While promising, new findings often need further validation before becoming standard clinical practice.",
+      "When evaluating medical research, consider factors like study size, design, peer review status, funding sources, and whether the results have been replicated. Individual studies should be interpreted within the context of the broader body of evidence."
+    ],
+    fallback: [
+      "That's an interesting question. While I aim to provide helpful health information, I recommend consulting with a healthcare professional for personalized advice based on your specific situation.",
+      "I understand you're looking for information on this topic. While I can provide general insights, a healthcare provider can give you guidance tailored to your individual needs and medical history.",
+      "Thank you for your question. I can offer general health information, but for specific medical advice or diagnosis, it's best to consult with a qualified healthcare professional."
+    ]
   };
-  
+
+  // Function to classify the user's message
+  const classifyMessage = (text: string): keyof typeof responses => {
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('hi') || lowerText.includes('hello') || lowerText.includes('hey')) {
+      return 'greeting';
+    } else if (lowerText.includes('symptom') || lowerText.includes('pain') || lowerText.includes('feel') || lowerText.includes('hurt')) {
+      return 'symptoms';
+    } else if (lowerText.includes('treat') || lowerText.includes('cure') || lowerText.includes('heal')) {
+      return 'treatment';
+    } else if (lowerText.includes('prevent') || lowerText.includes('avoid')) {
+      return 'prevention';
+    } else if (lowerText.includes('eat') || lowerText.includes('food') || lowerText.includes('diet') || lowerText.includes('nutrition')) {
+      return 'nutrition';
+    } else if (lowerText.includes('exercise') || lowerText.includes('workout') || lowerText.includes('fitness') || lowerText.includes('activity')) {
+      return 'exercise';
+    } else if (lowerText.includes('medicine') || lowerText.includes('drug') || lowerText.includes('pill') || lowerText.includes('medication')) {
+      return 'medications';
+    } else if (lowerText.includes('mental') || lowerText.includes('stress') || lowerText.includes('anxiety') || lowerText.includes('depression')) {
+      return 'mental_health';
+    } else if (lowerText.includes('research') || lowerText.includes('study') || lowerText.includes('evidence')) {
+      return 'research';
+    } else {
+      return 'fallback';
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -57,102 +133,12 @@ const AIChat: React.FC = () => {
     setMessage('');
     setIsLoading(true);
     
-    // Process message to determine response
-    const lowerCaseMsg = message.toLowerCase();
+    // Classify message and get appropriate response category
+    const category = classifyMessage(message);
+    const responseList = responses[category];
     
-    // First, determine the message category
-    let responseCategory = 'general';
-    
-    if (lowerCaseMsg.includes("symptom") || lowerCaseMsg.includes("feel") || lowerCaseMsg.includes("sick")) {
-      responseCategory = 'symptoms';
-    } else if (lowerCaseMsg.includes("emergency") || lowerCaseMsg.includes("urgent") || lowerCaseMsg.includes("pain")) {
-      responseCategory = 'emergency';
-    } else if (lowerCaseMsg.includes("how") || lowerCaseMsg.includes("use") || lowerCaseMsg.includes("help")) {
-      responseCategory = 'usage';
-    } else if (lowerCaseMsg.includes("thank") || lowerCaseMsg.includes("appreciate")) {
-      responseCategory = 'thanks';
-    } else if (lowerCaseMsg.includes("missing") || lowerCaseMsg.includes("required") || lowerCaseMsg.includes("error")) {
-      responseCategory = 'errors';
-    } else if (lowerCaseMsg.includes("news") || lowerCaseMsg.includes("research") || lowerCaseMsg.includes("article")) {
-      responseCategory = 'news';
-    } else if (lowerCaseMsg.includes("family") || lowerCaseMsg.includes("history") || lowerCaseMsg.includes("genetic")) {
-      responseCategory = 'family';
-    }
-    
-    // Multiple response options for each category
-    const responseOptions: Record<string, string[]> = {
-      general: [
-        "I'm here to help answer your health-related questions. What specific information are you looking for today?",
-        "How can I assist with your health questions? I can help with symptom analysis, health information, or guide you through using Health Compass.",
-        "I'm your Health Compass assistant. Feel free to ask about symptoms, conditions, or how to use our tools.",
-        "Welcome to Health Compass. I can provide general health information and help you navigate our symptom checker. What would you like to know?"
-      ],
-      symptoms: [
-        "It sounds like you're concerned about some symptoms. You can use our symptom checker above to help understand what might be causing them. Be sure to select all your symptoms for accurate results.",
-        "To analyze your symptoms, please use the symptom checker tool. Select your symptoms from the dropdown, provide your age and gender (required), and click 'Analyze Symptoms'.",
-        "For symptom analysis, I recommend using our main symptom checker tool. You'll need to enter your age, gender, and select at least one symptom to get results.",
-        "I notice you're mentioning symptoms. The most accurate way to check them is through our symptom checker tool. Remember that age and gender are required fields for accurate analysis."
-      ],
-      emergency: [
-        "⚠️ For any medical emergency, please call emergency services immediately (911 in the US). Don't delay seeking professional help if you're experiencing severe symptoms.",
-        "This sounds serious. Please contact emergency services (911) immediately if you're experiencing severe pain or life-threatening symptoms.",
-        "Medical emergencies require immediate professional attention. Please call 911 or your local emergency number right away.",
-        "Your symptoms sound urgent. Please seek immediate medical care through emergency services rather than continuing this conversation."
-      ],
-      usage: [
-        "To use Health Compass effectively:\n1. Select your symptoms from the dropdown\n2. Enter your age and gender (required)\n3. Add more details if available\n4. Click 'Analyze Symptoms' for results",
-        "Using our symptom checker is simple:\n- Enter age and gender (required)\n- Select symptoms you're experiencing\n- Add additional information like duration \n- Click the analyze button to see possible matches",
-        "I can guide you through using Health Compass. First, you'll need to enter required information (age, gender) and select at least one symptom. Other fields like family history are optional but improve results.",
-        "To get the most from Health Compass:\n1. Be specific with symptom selection\n2. Always include age and gender\n3. Add medical history if relevant\n4. Review multiple possible matches in results"
-      ],
-      errors: [
-        "The symptom checker requires age, gender, and at least one symptom to be selected. Please make sure you've filled in those required fields to get results.",
-        "If you're seeing an error, check that you've included all required information: age, gender, and at least one symptom selection are mandatory for analysis.",
-        "Missing information? The system needs your age, gender, and at least one symptom to generate results. Other fields are helpful but optional.",
-        "Error messages typically appear when required fields are missing. For the symptom checker, you must provide age, gender, and select at least one symptom before analysis."
-      ],
-      news: [
-        "You can explore health news in our dedicated section. Simply scroll down to the news area or use the search function to find articles on specific health topics.",
-        "Our news section features the latest health research and updates. You can search for specific topics or browse through recent articles.",
-        "Health Compass includes a news section where you can search for articles on specific conditions or browse general health news.",
-        "To find health news, scroll down to the news section. You can search for specific health topics or conditions of interest."
-      ],
-      family: [
-        "Family history is helpful for understanding your risk factors. In the symptom checker, you can add relevant family conditions. This information is optional but improves accuracy.",
-        "When adding family history, focus on conditions with known genetic components. This optional information helps provide more personalized results.",
-        "The family history section is optional but valuable. Include conditions that run in your family, especially those with genetic links, for more personalized analysis.",
-        "While providing family history is optional, it can significantly improve the accuracy of your results by identifying potential genetic risk factors."
-      ],
-      thanks: [
-        "You're welcome! I'm glad I could help. Feel free to ask if you have any other questions about Health Compass.",
-        "Happy to assist! If you need anything else while using Health Compass, just let me know.",
-        "My pleasure! Don't hesitate to reach out if you have more questions as you explore Health Compass.",
-        "You're welcome! I'm here to help make your experience with Health Compass as smooth as possible."
-      ]
-    };
-    
-    // Select a response from the appropriate category
-    const availableResponses = responseOptions[responseCategory];
-    
-    // Filter out recently used responses if possible
-    const filteredResponses = availableResponses.filter(response => !isRepetitiveResponse(response));
-    
-    // If all responses have been recently used, reset and use all options
-    let aiResponse: string;
-    if (filteredResponses.length === 0) {
-      // Reset recent responses and pick a random one
-      setRecentResponses([]);
-      aiResponse = availableResponses[Math.floor(Math.random() * availableResponses.length)];
-    } else {
-      // Pick a non-repetitive response
-      aiResponse = filteredResponses[Math.floor(Math.random() * filteredResponses.length)];
-    }
-    
-    // Keep track of recent responses (limit to last 3)
-    setRecentResponses(prev => {
-      const updated = [...prev, aiResponse];
-      return updated.length > 3 ? updated.slice(-3) : updated;
-    });
+    // Select a random response from the category
+    const aiResponse = responseList[Math.floor(Math.random() * responseList.length)];
     
     // Add slight delay for natural feel
     setTimeout(() => {
@@ -173,7 +159,7 @@ const AIChat: React.FC = () => {
           duration: 5000,
         });
       }
-    }, 800);
+    }, 1000);
   };
   
   return (

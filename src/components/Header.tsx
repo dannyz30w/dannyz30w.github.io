@@ -37,10 +37,6 @@ const Header: React.FC = () => {
           <a href="#contact" className="text-gray-700 hover:text-primary transition-colors font-medium">
             Contact
           </a>
-          <button id="open-chat" className="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300 font-medium text-sm flex items-center space-x-1 mr-2">
-            <MessageSquareText className="h-4 w-4 mr-1" />
-            <span>AI Assistant</span>
-          </button>
           <button className="bg-secondary hover:bg-secondary/80 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300 font-medium text-sm flex items-center space-x-1">
             <span>Emergency Info</span>
           </button>
@@ -70,10 +66,6 @@ const Header: React.FC = () => {
             <a href="#contact" className="text-gray-700 hover:text-primary transition-colors font-medium py-2" onClick={toggleMenu}>
               Contact
             </a>
-            <button id="open-chat-mobile" className="bg-primary hover:bg-primary/80 text-white px-4 py-3 rounded-lg shadow transition-colors duration-300 font-medium text-sm flex items-center justify-center mt-2 mb-2">
-              <MessageSquareText className="h-4 w-4 mr-1" />
-              <span>AI Assistant</span>
-            </button>
             <button className="bg-secondary hover:bg-secondary/80 text-white px-4 py-3 rounded-lg shadow transition-colors duration-300 font-medium text-sm flex items-center justify-center">
               <span>Emergency Info</span>
             </button>
