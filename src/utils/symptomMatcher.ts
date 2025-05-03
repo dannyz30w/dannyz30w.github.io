@@ -69,8 +69,7 @@ export function matchConditions(userData: UserData, conditionsList: Condition[])
     if (userData.pastMedicalConditions && userData.pastMedicalConditions.length > 0) {
       const relatedConditionMatch = userData.pastMedicalConditions.some(pastCondition => {
         const pastConditionLower = pastCondition.toLowerCase();
-        return condition.name.toLowerCase().includes(pastConditionLower) ||
-               (condition.relatedConditions && condition.relatedConditions.some(rc => rc.toLowerCase().includes(pastConditionLower)));
+        return condition.name.toLowerCase().includes(pastConditionLower);
       });
       
       if (relatedConditionMatch) {

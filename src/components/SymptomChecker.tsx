@@ -36,11 +36,11 @@ const SymptomChecker: React.FC = () => {
     duration: 0,
     familyHistory: [] as string[],
     additionalInfo: '',
-    medications: [] as string,
-    allergies: [] as string,
+    medications: [] as string[],
+    allergies: [] as string[],
     weight: '',
     height: '',
-    pastMedicalConditions: [] as string,
+    pastMedicalConditions: [] as string[],
   });
 
   // UI state

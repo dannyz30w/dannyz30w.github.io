@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSymptomById } from '@/data/symptoms';
 import { Condition } from '@/data/conditions';
 import { getMedicalAttentionText, getMedicalAttentionColor, getSeverityColor } from '@/utils/symptomMatcher';
-import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X } from 'lucide-react';
 import HealthNews from './HealthNews';
 
 interface ResultsDisplayProps {
@@ -213,7 +213,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
 
                     <div className="mt-5 pt-4 border-t border-gray-200">
                       <h4 className="font-semibold text-gray-700 mb-2">Prevention & Management</h4>
-                      {condition.preventionTips ? (
+                      {condition.preventionTips && condition.preventionTips.length > 0 ? (
                         <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
                           {condition.preventionTips.map((tip, index) => (
                             <li key={index}>{tip}</li>
