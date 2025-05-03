@@ -5,10 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { X, Send, Loader2, MessageSquare } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   content: string;
-  sender: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   timestamp: Date;
 }
 
@@ -17,15 +18,15 @@ const AIChat: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
-      content: "Hello! I'm your Health Compass AI assistant. I can help answer your health questions using the latest medical research. How can I help you today?",
-      sender: 'assistant',
+      content: "Hello! I'm your Health Compass AI assistant. I can provide information about health conditions, treatments, wellness tips, and answer medical questions to the best of my knowledge. How can I assist you today?",
+      role: 'assistant',
       timestamp: new Date(),
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  
+
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,87 +35,6 @@ const AIChat: React.FC = () => {
   // Function to show chat widget
   const toggleChat = () => {
     setIsOpen(prev => !prev);
-  };
-  
-  // Sample responses to common medical questions
-  const responses = {
-    greeting: [
-      "Hello! I'm here to help with your health questions. What would you like to know?",
-      "Hi there! How can I assist you with your health concerns today?",
-      "Welcome to Health Compass. How may I help you with your health questions?"
-    ],
-    symptoms: [
-      "Based on those symptoms, there could be several potential causes. It's important to consult with a healthcare professional for a proper diagnosis. Would you like me to provide some general information about these symptoms?",
-      "These symptoms could be associated with several conditions. While I can provide general information, a healthcare provider can give you personalized advice. Would you like me to explain some possible causes?",
-      "I understand you're experiencing these symptoms. While I can offer general insights, it's best to consult with a medical professional for proper evaluation. What specific information are you looking for?"
-    ],
-    treatment: [
-      "Treatment options typically include medication, lifestyle changes, and sometimes surgical interventions depending on the condition. A healthcare provider can recommend the most appropriate treatment plan for your specific situation.",
-      "The most effective treatment depends on your specific diagnosis, medical history, and other factors. Generally, options may include medications, physical therapy, lifestyle modifications, or in some cases, surgical procedures.",
-      "Treatment approaches vary based on diagnosis, severity, and individual factors. While I can provide general information about common treatments, your doctor can create a personalized plan."
-    ],
-    prevention: [
-      "Prevention strategies often include maintaining a balanced diet, regular physical activity, adequate sleep, stress management, and regular medical check-ups. Would you like more specific information about preventing a particular condition?",
-      "Preventive measures typically involve lifestyle factors such as nutrition, exercise, avoiding tobacco and excessive alcohol, and getting recommended screenings. Is there a specific condition you're concerned about preventing?",
-      "Many health conditions can be prevented through healthy lifestyle choices. This includes nutritious eating, regular exercise, not smoking, limiting alcohol, managing stress, and getting appropriate vaccinations and screenings."
-    ],
-    nutrition: [
-      "A balanced diet typically includes a variety of fruits, vegetables, whole grains, lean proteins, and healthy fats. Specific nutritional needs may vary based on age, sex, activity level, and health conditions. Would you like information about nutrition for a specific health concern?",
-      "Nutritional recommendations focus on whole foods like vegetables, fruits, whole grains, lean proteins, and healthy fats while limiting processed foods, added sugars, and excess sodium. Different health conditions may require specific dietary approaches.",
-      "Good nutrition involves eating a variety of foods that give you the nutrients needed to maintain health, feel good, and have energy. These nutrients include protein, carbohydrates, fat, water, vitamins, and minerals."
-    ],
-    exercise: [
-      "Regular physical activity offers numerous health benefits, including improved cardiovascular health, stronger muscles and bones, better weight management, and enhanced mental health. Adults should aim for at least 150 minutes of moderate-intensity activity per week.",
-      "Exercise recommendations typically include both aerobic activity (like walking, swimming or cycling) and strength training. The specific amount and type of exercise that's best for you depends on factors like age, health status, and fitness goals.",
-      "Physical activity benefits nearly all aspects of health. For most adults, experts recommend 150 minutes of moderate aerobic activity or 75 minutes of vigorous activity weekly, plus muscle-strengthening activities twice weekly."
-    ],
-    medications: [
-      "Medications work in different ways depending on their type and purpose. It's important to take medications as prescribed, be aware of potential side effects, and inform your healthcare provider of all medications you're taking to avoid interactions.",
-      "When taking any medication, it's important to follow your doctor's instructions carefully, be aware of possible side effects, and alert your healthcare provider to any problems. Never stop taking a medication without consulting your doctor first.",
-      "Medications can be effective when used appropriately, but all have potential benefits and risks. Always take medications as prescribed, report side effects to your doctor, and don't adjust dosage without medical guidance."
-    ],
-    mental_health: [
-      "Mental health is just as important as physical health. Common mental health conditions include depression, anxiety disorders, and stress-related conditions. Treatment often includes therapy, medication, lifestyle changes, or a combination of these approaches.",
-      "Taking care of your mental health involves seeking professional help when needed, building strong relationships, managing stress, getting enough sleep, staying physically active, and practicing mindfulness or other relaxation techniques.",
-      "Mental health affects how we think, feel, and act. It also helps determine how we handle stress, relate to others, and make choices. Mental health treatment can include counseling, therapy, medication, or a combination of approaches."
-    ],
-    research: [
-      "Medical research is constantly evolving. The most reliable information comes from peer-reviewed studies, systematic reviews, and meta-analyses. It's always good to check that health information is based on current evidence from reputable sources.",
-      "Recent medical research has made significant advances in areas like genetics, immunotherapy, and digital health technologies. While promising, new findings often need further validation before becoming standard clinical practice.",
-      "When evaluating medical research, consider factors like study size, design, peer review status, funding sources, and whether the results have been replicated. Individual studies should be interpreted within the context of the broader body of evidence."
-    ],
-    fallback: [
-      "That's an interesting question. While I aim to provide helpful health information, I recommend consulting with a healthcare professional for personalized advice based on your specific situation.",
-      "I understand you're looking for information on this topic. While I can provide general insights, a healthcare provider can give you guidance tailored to your individual needs and medical history.",
-      "Thank you for your question. I can offer general health information, but for specific medical advice or diagnosis, it's best to consult with a qualified healthcare professional."
-    ]
-  };
-
-  // Function to classify the user's message
-  const classifyMessage = (text: string): keyof typeof responses => {
-    const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('hi') || lowerText.includes('hello') || lowerText.includes('hey')) {
-      return 'greeting';
-    } else if (lowerText.includes('symptom') || lowerText.includes('pain') || lowerText.includes('feel') || lowerText.includes('hurt')) {
-      return 'symptoms';
-    } else if (lowerText.includes('treat') || lowerText.includes('cure') || lowerText.includes('heal')) {
-      return 'treatment';
-    } else if (lowerText.includes('prevent') || lowerText.includes('avoid')) {
-      return 'prevention';
-    } else if (lowerText.includes('eat') || lowerText.includes('food') || lowerText.includes('diet') || lowerText.includes('nutrition')) {
-      return 'nutrition';
-    } else if (lowerText.includes('exercise') || lowerText.includes('workout') || lowerText.includes('fitness') || lowerText.includes('activity')) {
-      return 'exercise';
-    } else if (lowerText.includes('medicine') || lowerText.includes('drug') || lowerText.includes('pill') || lowerText.includes('medication')) {
-      return 'medications';
-    } else if (lowerText.includes('mental') || lowerText.includes('stress') || lowerText.includes('anxiety') || lowerText.includes('depression')) {
-      return 'mental_health';
-    } else if (lowerText.includes('research') || lowerText.includes('study') || lowerText.includes('evidence')) {
-      return 'research';
-    } else {
-      return 'fallback';
-    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -125,41 +45,120 @@ const AIChat: React.FC = () => {
     // Add user message
     const userMessage: Message = {
       content: message,
-      sender: 'user',
+      role: 'user',
       timestamp: new Date(),
     };
     
     setMessages(prev => [...prev, userMessage]);
     setMessage('');
     setIsLoading(true);
-    
-    // Classify message and get appropriate response category
-    const category = classifyMessage(message);
-    const responseList = responses[category];
-    
-    // Select a random response from the category
-    const aiResponse = responseList[Math.floor(Math.random() * responseList.length)];
-    
-    // Add slight delay for natural feel
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        content: aiResponse,
-        sender: 'assistant',
-        timestamp: new Date(),
+
+    try {
+      // Get previous messages for context (up to 5 most recent)
+      const recentMessages = messages.slice(-5).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      // Append the new user message
+      recentMessages.push({ 
+        role: 'user',
+        content: userMessage.content
+      });
+
+      // Create a system message for context
+      const systemMessage = {
+        role: 'system',
+        content: `You are a helpful, knowledgeable medical AI assistant named Health Compass. 
+        Provide accurate, evidence-based health information and respond in a conversational, helpful tone.
+        When discussing medical topics, emphasize the importance of consulting healthcare professionals for diagnosis and treatment.
+        Keep responses concise but informative. If you don't know something, admit it rather than providing potentially incorrect information.
+        Format responses using markdown where helpful.`
       };
       
-      setMessages(prev => [...prev, assistantMessage]);
+      // Simulate API call to get chatbot response
+      setTimeout(async () => {
+        try {
+          // In a real app, this would be an API call to an AI service
+          // For this example, we'll generate a response based on the user's query
+          const assistantResponse = await generateAIResponse(userMessage.content, recentMessages);
+          
+          const assistantMessage: Message = {
+            content: assistantResponse,
+            role: 'assistant',
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, assistantMessage]);
+          
+          // Show toast when chat is minimized
+          if (!isOpen) {
+            toast({
+              title: "New message from Health Assistant",
+              description: assistantResponse.substring(0, 60) + "...",
+              duration: 5000,
+            });
+          }
+        } catch (error) {
+          console.error('Error generating AI response:', error);
+          
+          // Add error message
+          const errorMessage: Message = {
+            content: "I'm sorry, I couldn't process your request at the moment. Please try again later.",
+            role: 'assistant',
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, errorMessage]);
+        } finally {
+          setIsLoading(false);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error('Error processing message:', error);
       setIsLoading(false);
-      
-      // Show toast when chat is minimized
-      if (!isOpen) {
-        toast({
-          title: "New message from Health Assistant",
-          description: aiResponse.substring(0, 60) + "...",
-          duration: 5000,
-        });
-      }
-    }, 1000);
+    }
+  };
+  
+  // Function to generate AI responses based on patterns in the user's message
+  const generateAIResponse = async (userQuery: string, conversationHistory: any[]): Promise<string> => {
+    const query = userQuery.toLowerCase();
+    
+    // Common health topics and responses
+    if (query.includes('headache') || query.includes('head pain') || query.includes('migraine')) {
+      return "Headaches can be caused by various factors including stress, dehydration, lack of sleep, or underlying medical conditions. For occasional headaches, rest, hydration, and over-the-counter pain relievers may help. If you experience severe, persistent, or unusual headaches, it's important to consult a healthcare professional for proper evaluation.\n\nSome general recommendations:\n- Stay hydrated\n- Maintain regular sleep patterns\n- Practice stress reduction techniques\n- Avoid known triggers (certain foods, alcohol, etc.)\n\nRemember, this information is not a substitute for professional medical advice.";
+    } 
+    
+    if (query.includes('cold') || query.includes('flu') || query.includes('fever')) {
+      return "Common colds and flu are viral infections that affect the respiratory system. Symptoms typically include fever, cough, sore throat, runny nose, body aches, and fatigue.\n\nFor management:\n- Rest and stay hydrated\n- Over-the-counter medications can help relieve symptoms\n- Use a humidifier to ease congestion\n- Wash hands frequently to prevent spread\n\nIf symptoms are severe or persistent, especially with high fever, difficulty breathing, or chest pain, please seek medical attention promptly.";
+    }
+    
+    if (query.includes('diet') || query.includes('nutrition') || query.includes('healthy eating')) {
+      return "A balanced diet is essential for overall health. The Mediterranean diet and DASH diet are both evidence-based eating patterns associated with numerous health benefits.\n\nKey principles include:\n- Plenty of fruits and vegetables (aim for half your plate)\n- Whole grains rather than refined grains\n- Lean proteins (fish, poultry, beans, nuts)\n- Healthy fats (olive oil, avocados, nuts)\n- Limited added sugars, sodium, and processed foods\n\nIndividual nutritional needs vary based on age, activity level, health conditions, and other factors. A registered dietitian can provide personalized recommendations for your specific situation.";
+    }
+    
+    if (query.includes('exercise') || query.includes('workout') || query.includes('physical activity')) {
+      return "Regular physical activity offers numerous health benefits, including improved cardiovascular health, stronger muscles and bones, better weight management, and enhanced mental wellbeing.\n\nThe general recommendation for adults is:\n- At least 150 minutes of moderate aerobic activity or 75 minutes of vigorous activity weekly\n- Muscle-strengthening activities at least twice a week\n- Balance training, especially for older adults\n\nStart gradually if you're new to exercise, and choose activities you enjoy to help maintain consistency. Always consult with a healthcare provider before beginning a new exercise program, especially if you have existing health conditions.";
+    }
+    
+    if (query.includes('sleep') || query.includes('insomnia') || query.includes('can\'t sleep')) {
+      return "Quality sleep is crucial for physical and mental health. Most adults need 7-9 hours of sleep per night.\n\nTo improve sleep quality:\n- Maintain a consistent sleep schedule\n- Create a restful environment (cool, dark, quiet room)\n- Limit screen time before bed\n- Avoid caffeine and large meals close to bedtime\n- Establish a relaxing bedtime routine\n\nIf you consistently struggle with sleep despite good sleep hygiene practices, consider consulting a healthcare provider, as persistent insomnia may require additional treatment approaches.";
+    }
+    
+    if (query.includes('anxiety') || query.includes('stress') || query.includes('mental health')) {
+      return "Anxiety and stress are common experiences that can impact both mental and physical wellbeing when persistent or severe.\n\nSome evidence-based strategies for managing stress and anxiety include:\n- Regular physical activity\n- Mindfulness meditation and deep breathing exercises\n- Adequate sleep and nutrition\n- Limiting alcohol and caffeine\n- Social connection and support\n- Professional help through therapy (particularly cognitive-behavioral therapy)\n\nIf anxiety is significantly affecting your daily functioning or quality of life, please consider reaching out to a mental health professional for proper evaluation and support.";
+    }
+    
+    if (query.includes('thank')) {
+      return "You're welcome! I'm glad I could help. Feel free to ask if you have any other health-related questions.";
+    }
+    
+    if (query.includes('hello') || query.includes('hi ') || query === 'hi' || query.includes('hey')) {
+      return "Hello! I'm your Health Compass AI assistant. I can provide evidence-based health information on topics like symptoms, conditions, treatments, nutrition, exercise, and general wellness. How can I help you today?";
+    }
+    
+    // Default response for other queries
+    return "Thank you for your question. As an AI health assistant, I aim to provide general health information based on current medical understanding.\n\nFor specific medical concerns, diagnoses, or treatment plans, it's important to consult with a qualified healthcare professional who can provide personalized advice based on your complete medical history and examination.\n\nIs there a specific health topic I can provide general information about?";
   };
   
   return (
@@ -183,7 +182,7 @@ const AIChat: React.FC = () => {
         <Card className="overflow-hidden border-2 border-primary">
           {/* Header */}
           <div className="bg-primary p-3 flex justify-between items-center">
-            <h3 className="text-white font-semibold">AI Health Assistant</h3>
+            <h3 className="text-white font-semibold">Health Compass AI</h3>
             <button 
               onClick={toggleChat}
               className="text-white hover:bg-primary-foreground/20 rounded-full p-1"
@@ -197,16 +196,18 @@ const AIChat: React.FC = () => {
             {messages.map((msg, i) => (
               <div 
                 key={i} 
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div 
                   className={`max-w-[80%] p-3 rounded-lg ${
-                    msg.sender === 'user' 
+                    msg.role === 'user' 
                       ? 'bg-primary text-white' 
                       : 'bg-gray-100 text-gray-800'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                  <div className="text-sm prose prose-sm">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
                   <div className="text-xs opacity-70 mt-1">
                     {msg.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </div>
@@ -218,7 +219,7 @@ const AIChat: React.FC = () => {
                 <div className="max-w-[80%] p-3 rounded-lg bg-gray-100">
                   <div className="flex items-center">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    <p className="text-sm">Typing...</p>
+                    <p className="text-sm">Generating response...</p>
                   </div>
                 </div>
               </div>
@@ -230,7 +231,7 @@ const AIChat: React.FC = () => {
           <form onSubmit={handleSendMessage} className="bg-gray-50 p-3 flex items-center gap-2">
             <Input
               type="text"
-              placeholder="Type your question here..."
+              placeholder="Ask about health topics..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="flex-grow"
