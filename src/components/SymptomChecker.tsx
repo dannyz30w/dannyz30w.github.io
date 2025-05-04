@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,7 +39,9 @@ const SymptomChecker: React.FC = () => {
     medications: [] as string[],
     allergies: [] as string[],
     weight: '',
+    weightUnit: 'kg',
     height: '',
+    heightUnit: 'cm',
     pastMedicalConditions: [] as string[],
   });
 
@@ -233,7 +234,7 @@ const SymptomChecker: React.FC = () => {
   
   const removeAllergy = (allergy: string) => {
     setUserData(prev => ({
-      ...prev,
+      ...prev, 
       allergies: prev.allergies.filter(a => a !== allergy)
     }));
   };
@@ -317,7 +318,9 @@ const SymptomChecker: React.FC = () => {
       medications: [],
       allergies: [],
       weight: '',
+      weightUnit: 'kg',
       height: '',
+      heightUnit: 'cm',
       pastMedicalConditions: [],
     });
     setResults([]);
@@ -416,21 +419,21 @@ const SymptomChecker: React.FC = () => {
     <div className="max-w-4xl mx-auto slide-in">
       <div className="text-center mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-medical-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Advanced Symptom Checker</h2>
-        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
+        <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-2xl mx-auto">
           Provide information about your symptoms and personal details to get possible conditions and recommendations from our database of over 100 medical conditions
         </p>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-8">
-        <Card className="overflow-hidden border-medical-light shadow-md">
-          <div className="bg-gradient-to-r from-medical-light to-white p-4 border-b border-medical-light">
-            <h3 className="text-lg font-semibold text-medical-text">Personal Information</h3>
-            <p className="text-sm text-gray-500">This helps us provide more accurate results</p>
+        <Card className="overflow-hidden border-medical-light shadow-md dark:border-blue-800/50 dark:bg-gray-800/70">
+          <div className="bg-gradient-to-r from-medical-light to-white dark:from-blue-900/40 dark:to-gray-800 p-4 border-b border-medical-light dark:border-blue-900/50">
+            <h3 className="text-lg font-semibold text-medical-text dark:text-blue-300">Personal Information</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">This helps us provide more accurate results</p>
           </div>
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="age" className="text-medical-text flex items-center gap-1">
+                <Label htmlFor="age" className="text-medical-text dark:text-blue-300 flex items-center gap-1">
                   Age <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -439,23 +442,23 @@ const SymptomChecker: React.FC = () => {
                   placeholder="Enter your age"
                   value={userData.age}
                   onChange={(e) => setUserData({ ...userData, age: e.target.value })}
-                  className="border-gray-300 focus:border-medical-text focus:ring-medical-light"
+                  className="border-gray-300 focus:border-medical-text focus:ring-medical-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="gender" className="text-medical-text flex items-center gap-1">
+                <Label htmlFor="gender" className="text-medical-text dark:text-blue-300 flex items-center gap-1">
                   Gender <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={userData.gender}
                   onValueChange={(value) => setUserData({ ...userData, gender: value })}
                 >
-                  <SelectTrigger id="gender" className="border-gray-300 focus:border-medical-text">
+                  <SelectTrigger id="gender" className="border-gray-300 focus:border-medical-text dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectItem value="male">Male</SelectItem>
                     <SelectItem value="female">Female</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
@@ -464,26 +467,26 @@ const SymptomChecker: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-medical-text">Location (optional)</Label>
+                <Label htmlFor="location" className="text-medical-text dark:text-blue-300">Location (optional)</Label>
                 <Input
                   id="location"
                   placeholder="City or region"
                   value={userData.location}
                   onChange={(e) => setUserData({ ...userData, location: e.target.value })}
-                  className="border-gray-300 focus:border-medical-text focus:ring-medical-light"
+                  className="border-gray-300 focus:border-medical-text focus:ring-medical-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="duration" className="text-medical-text">How long have you had these symptoms?</Label>
+                <Label htmlFor="duration" className="text-medical-text dark:text-blue-300">How long have you had these symptoms?</Label>
                 <Select
                   value={userData.duration.toString()}
                   onValueChange={(value) => setUserData({ ...userData, duration: parseInt(value) })}
                 >
-                  <SelectTrigger id="duration" className="border-gray-300 focus:border-medical-text">
+                  <SelectTrigger id="duration" className="border-gray-300 focus:border-medical-text dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                     <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                     {symptomDurations.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
@@ -493,43 +496,72 @@ const SymptomChecker: React.FC = () => {
                 </Select>
               </div>
               
-              <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row items-center justify-between mt-2 pt-4 border-t border-gray-200">
+              <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row items-center justify-between mt-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center">
-                  <span className="text-medical-text font-medium mr-2">Additional Health Information</span>
+                  <span className="text-medical-text dark:text-blue-300 font-medium mr-2">Additional Health Information</span>
                   <Switch 
                     checked={showAdvancedOptions} 
                     onCheckedChange={setShowAdvancedOptions} 
-                    className="data-[state=checked]:bg-medical-text"
+                    className="data-[state=checked]:bg-medical-text dark:data-[state=checked]:bg-blue-600"
                   />
                 </div>
-                <p className="text-sm text-gray-500 mt-1 md:mt-0">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 md:mt-0">
                   Providing more details helps improve the accuracy of your results
                 </p>
               </div>
             </div>
             
             {showAdvancedOptions && (
-              <div className="mt-6 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="height" className="text-medical-text">Height (cm/ft)</Label>
-                  <Input
-                    id="height"
-                    placeholder="Height"
-                    value={userData.height}
-                    onChange={(e) => setUserData({ ...userData, height: e.target.value })}
-                    className="border-gray-300 focus:border-medical-text"
-                  />
+                  <Label htmlFor="height" className="text-medical-text dark:text-blue-300">Height</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="height"
+                      placeholder="Height"
+                      type="number"
+                      value={userData.height}
+                      onChange={(e) => setUserData({ ...userData, height: e.target.value })}
+                      className="border-gray-300 focus:border-medical-text dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    />
+                    <Select
+                      value={userData.heightUnit}
+                      onValueChange={(value) => setUserData({ ...userData, heightUnit: value })}
+                    >
+                      <SelectTrigger className="w-24 border-gray-300 focus:border-medical-text dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                        <SelectValue placeholder="Unit" />
+                      </SelectTrigger>
+                      <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                        <SelectItem value="cm">cm</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="weight" className="text-medical-text">Weight (kg/lbs)</Label>
-                  <Input
-                    id="weight"
-                    placeholder="Weight"
-                    value={userData.weight}
-                    onChange={(e) => setUserData({ ...userData, weight: e.target.value })}
-                    className="border-gray-300 focus:border-medical-text"
-                  />
+                  <Label htmlFor="weight" className="text-medical-text dark:text-blue-300">Weight</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="weight"
+                      placeholder="Weight"
+                      type="number"
+                      value={userData.weight}
+                      onChange={(e) => setUserData({ ...userData, weight: e.target.value })}
+                      className="border-gray-300 focus:border-medical-text dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    />
+                    <Select
+                      value={userData.weightUnit}
+                      onValueChange={(value) => setUserData({ ...userData, weightUnit: value })}
+                    >
+                      <SelectTrigger className="w-24 border-gray-300 focus:border-medical-text dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                        <SelectValue placeholder="Unit" />
+                      </SelectTrigger>
+                      <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="lb">lb</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <div className="space-y-2 col-span-1 md:col-span-2">
@@ -795,23 +827,9 @@ const SymptomChecker: React.FC = () => {
         </Card>
         
         <Card className="overflow-hidden border-medical-light shadow-md">
-          <div className="bg-gradient-to-r from-medical-light to-white p-4 border-b border-medical-light flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-semibold text-medical-text">Family Medical History <span className="text-sm font-normal text-gray-500">(Optional)</span></h3>
-              <p className="text-sm text-gray-500">Select conditions that run in your family</p>
-            </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="p-1 rounded-full bg-medical-light/50">
-                    <InfoIcon className="h-5 w-5 text-medical-text" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs text-sm">Family history can significantly affect your risk for certain conditions. Including this information helps provide more accurate results.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          <div className="bg-gradient-to-r from-medical-light to-white dark:from-blue-900/40 dark:to-gray-800 p-4 border-b border-medical-light dark:border-blue-900/50">
+            <h3 className="text-lg font-semibold text-medical-text">Family Medical History <span className="text-sm font-normal text-gray-500">(Optional)</span></h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Select conditions that run in your family</p>
           </div>
           <CardContent className="p-6">
             <div className="mb-4">
@@ -821,7 +839,7 @@ const SymptomChecker: React.FC = () => {
                   placeholder="Search family medical history..."
                   value={familyHistoryFilter}
                   onChange={(e) => setFamilyHistoryFilter(e.target.value)}
-                  className="pl-10 border-gray-300 focus:border-medical-text focus:ring-medical-light"
+                  className="pl-10 border-gray-300 focus:border-medical-text focus:ring-medical-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -897,9 +915,9 @@ const SymptomChecker: React.FC = () => {
         </Card>
 
         <Card className="overflow-hidden border-medical-light shadow-md">
-          <div className="bg-gradient-to-r from-medical-light to-white p-4 border-b border-medical-light">
+          <div className="bg-gradient-to-r from-medical-light to-white dark:from-blue-900/40 dark:to-gray-800 p-4 border-b border-medical-light dark:border-blue-900/50">
             <h3 className="text-lg font-semibold text-medical-text">Select Your Symptoms <span className="text-red-500">*</span></h3>
-            <p className="text-sm text-gray-500">Choose all symptoms you've been experiencing</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Choose all symptoms you've been experiencing</p>
           </div>
           <CardContent className="p-6">
             <div className="mb-6">
@@ -909,25 +927,25 @@ const SymptomChecker: React.FC = () => {
                   placeholder="Search symptoms..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 border-gray-300 focus:border-medical-text focus:ring-medical-light"
+                  className="pl-10 border-gray-300 focus:border-medical-text focus:ring-medical-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                 />
               </div>
 
               <div className="flex items-center mt-4 space-x-2 overflow-x-auto pb-2 scrollbar-hide">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center">
+                    <Button variant="outline" size="sm" className="flex items-center dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700">
                       <Filter className="h-4 w-4 mr-2" />
                       {selectedCategory ? 'Category: ' + symptomsByCategory.find(c => c.category.id === selectedCategory)?.category.name : 'Filter by category'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-64">
+                  <PopoverContent className="w-64 dark:bg-gray-800 dark:border-gray-700">
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Filter by category</h4>
+                      <h4 className="font-medium text-sm dark:text-gray-200">Filter by category</h4>
                       <ScrollArea className="h-60">
                         <div className="grid gap-1.5 pr-2">
                           <button
-                            className={`text-left px-2 py-1 rounded-md text-sm hover:bg-gray-100 ${!selectedCategory ? 'bg-medical-light text-medical-text font-medium' : ''}`}
+                            className={`text-left px-2 py-1 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${!selectedCategory ? 'bg-medical-light text-medical-text font-medium dark:bg-blue-900 dark:text-blue-200' : ''}`}
                             onClick={() => setSelectedCategory(null)}
                           >
                             All Categories
@@ -935,7 +953,7 @@ const SymptomChecker: React.FC = () => {
                           {symptomsByCategory.map(({ category }) => (
                             <button
                               key={category.id}
-                              className={`text-left px-2 py-1 rounded-md text-sm hover:bg-gray-100 ${selectedCategory === category.id ? 'bg-medical-light text-medical-text font-medium' : ''}`}
+                              className={`text-left px-2 py-1 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${selectedCategory === category.id ? 'bg-medical-light text-medical-text font-medium dark:bg-blue-900 dark:text-blue-200' : ''}`}
                               onClick={() => setSelectedCategory(category.id)}
                             >
                               {category.name}
@@ -952,7 +970,7 @@ const SymptomChecker: React.FC = () => {
                     variant="ghost" 
                     size="sm" 
                     onClick={() => setSelectedCategory(null)}
-                    className="text-xs h-8"
+                    className="text-xs h-8 dark:text-gray-300 dark:hover:bg-gray-700"
                   >
                     <X className="h-3 w-3 mr-1" />
                     Clear filter
@@ -964,9 +982,9 @@ const SymptomChecker: React.FC = () => {
             </div>
             
             <Tabs defaultValue="browse" className="mt-6">
-              <TabsList className="grid grid-cols-2 mb-4">
-                <TabsTrigger value="browse">Browse by Category</TabsTrigger>
-                <TabsTrigger value="search">Search Results</TabsTrigger>
+              <TabsList className="grid grid-cols-2 mb-4 dark:bg-gray-700">
+                <TabsTrigger value="browse" className="dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100">Browse by Category</TabsTrigger>
+                <TabsTrigger value="search" className="dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100">Search Results</TabsTrigger>
               </TabsList>
               
               <TabsContent value="browse" className="space-y-6">
@@ -1042,10 +1060,10 @@ const SymptomChecker: React.FC = () => {
           </CardContent>
         </Card>
         
-        <div className="flex justify-center">
+        <div className="flex justify-center animate-fade-in">
           <Button 
             type="submit" 
-            className="bg-medical-text hover:bg-medical-dark text-white px-8 shadow-md hover:shadow-lg transition-all"
+            className="bg-medical-text hover:bg-medical-dark text-white px-8 shadow-md hover:shadow-lg transition-all dark:bg-blue-600 dark:hover:bg-blue-700 transform hover:scale-105 duration-200"
             size="lg"
             disabled={userData.symptoms.length === 0}
           >

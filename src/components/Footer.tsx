@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-blue-900/30 dark:to-blue-800/30 mt-12 py-8 px-6">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Activity className="h-5 w-5 text-primary dark:text-blue-400" />
@@ -20,24 +20,13 @@ const Footer: React.FC = () => {
           </div>
           
           <div>
-            <h3 className="font-heading font-semibold text-lg text-gray-700 dark:text-gray-200 mb-4">Links</h3>
+            <h3 className="font-heading font-semibold text-lg text-gray-700 dark:text-gray-200 mb-4">Quick Links</h3>
             <ul className="space-y-2 text-gray-600 dark:text-gray-300">
               <li><a href="#" className="hover:text-primary dark:hover:text-blue-400 transition-colors">Home</a></li>
               <li><a href="#about" className="hover:text-primary dark:hover:text-blue-400 transition-colors">About</a></li>
-              <li><a href="#contact" className="hover:text-primary dark:hover:text-blue-400 transition-colors">Contact</a></li>
+              <li><a href="#news" className="hover:text-primary dark:hover:text-blue-400 transition-colors">Health News</a></li>
               <li><a href="#disclaimer" className="hover:text-primary dark:hover:text-blue-400 transition-colors">Disclaimer</a></li>
             </ul>
-          </div>
-          
-          <div>
-            <h3 className="font-heading font-semibold text-lg text-gray-700 dark:text-gray-200 mb-4">Contact</h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              For questions or feedback, please contact:
-              <br />
-              <a href="mailto:dazzy0130@gmail.com" className="text-primary dark:text-blue-400 hover:underline">
-                dazzy0130@gmail.com
-              </a>
-            </p>
           </div>
         </div>
         
@@ -45,6 +34,11 @@ const Footer: React.FC = () => {
           <p>© {new Date().getFullYear()} Symptora. All rights reserved.</p>
           <p className="mt-2">
             Not a substitute for professional medical advice, diagnosis, or treatment.
+          </p>
+          <p className="mt-2">
+            <a href="mailto:dazzy0130@gmail.com" className="text-primary dark:text-blue-400 hover:underline">
+              dazzy0130@gmail.com
+            </a>
           </p>
         </div>
       </div>

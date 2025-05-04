@@ -39,13 +39,13 @@
   }
  
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222.2 47% 10%;
     --foreground: 210 40% 98%;
  
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 47% 11%;
     --card-foreground: 210 40% 98%;
  
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 47% 11%;
     --popover-foreground: 210 40% 98%;
  
     --primary: 210 92% 45%;
@@ -55,19 +55,19 @@
     --secondary-foreground: 0 0% 100%;
  
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted-foreground: 215 20.2% 70%;
  
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
  
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
  
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 210 92% 45%;
     
-    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-background: 222.2 47% 11%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 92% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -104,12 +104,21 @@
   .text-gradient {
     @apply bg-gradient-to-br from-primary via-primary/90 to-primary/70 dark:from-blue-400 dark:via-blue-500 dark:to-blue-600 bg-clip-text text-transparent;
   }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -131,23 +140,51 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.7;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
 .slide-in {
-  animation: slideIn 0.3s ease-out forwards;
+  animation: slideIn 0.5s ease-out forwards;
 }
 
 .fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.7s ease-out forwards;
+}
+
+.scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
 }
 
 .animate-pulse-subtle {
   animation: pulse 2s infinite;
 }
 
-/* Add more animations here */
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Interactive elements animations */
 .hover-scale {
   @apply transition-transform duration-200 ease-out;
 }
@@ -162,4 +199,21 @@
 
 .hover-shadow:hover {
   @apply shadow-lg;
+}
+
+/* Animations for specific elements */
+.card-animation {
+  @apply transition-all duration-300 ease-out;
+}
+
+.card-animation:hover {
+  @apply transform -translate-y-1 shadow-lg;
+}
+
+.link-animation {
+  @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:dark:bg-blue-400 after:origin-bottom-right after:transition-transform after:duration-300;
+}
+
+.link-animation:hover {
+  @apply after:scale-x-100 after:origin-bottom-left;
 }

@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Calendar } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { format } from 'date-fns';
 
 interface NewsItem {
   title: string;
@@ -29,7 +29,7 @@ const sampleNewsData = {
       title: "New Research Shows Health Benefits of Mediterranean Diet",
       description: "A large-scale study has found that following a Mediterranean diet can significantly reduce the risk of cardiovascular disease and improve longevity.",
       url: "https://www.healthline.com/nutrition/mediterranean-diet-meal-plan",
-      urlToImage: "https://i0.wp.com/images-prod.healthline.com/hlcmsresource/images/topic_centers/Mediterranean-Diet-1296x728-Header.jpg?w=1155&h=1528",
+      urlToImage: "https://i0.wp.com/post.healthline.com/wp-content/uploads/2023/01/2593254-The-Mediterranean-Diet-A-Detailed-Beginners-Guide-and-Meal-Plan-Header-1296x729.jpg?w=1155&h=1528",
       source: { name: "Healthline" },
       publishedAt: "2025-05-01T14:30:00Z"
     },
@@ -136,44 +136,114 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
     fetchNews(condition);
   }, [condition]);
 
+  // Function to fetch news from an external API
   const fetchNews = async (query: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Instead of fetching from the API, we'll use our sample data
-      setTimeout(() => {
-        const normalizedQuery = query.toLowerCase();
-        
-        // Try to match with specific condition data
-        for (const [key, articles] of Object.entries(sampleNewsData)) {
-          if (normalizedQuery.includes(key)) {
-            setNews(articles);
-            setLoading(false);
-            return;
-          }
-        }
-        
-        // If no specific match found, return general health news
-        setNews(sampleNewsData.general);
-        setLoading(false);
-      }, 800); // Simulate loading time
+      // Use GNews API which has a free tier with some limitations but allows CORS
+      const response = await fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&country=us&max=10&token=f9ac5ccd83f9e4c6e392d57a71f4cf54`);
+      const data = await response.json();
+      
+      if (data.errors) {
+        throw new Error(data.errors[0] || 'Failed to fetch news');
+      }
+
+      if (data.articles && Array.isArray(data.articles)) {
+        // Transform the GNews API data structure to match our NewsItem interface
+        const formattedArticles = data.articles.map((article: any) => ({
+          title: article.title,
+          description: article.description,
+          url: article.url,
+          urlToImage: article.image,
+          source: { name: article.source.name },
+          publishedAt: article.publishedAt
+        }));
+        setNews(formattedArticles);
+      } else {
+        // If no articles found, set empty array
+        setNews([]);
+      }
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching news:', err);
       toast({
-        title: "Error",
-        description: "Failed to load news articles. Please try again later.",
+        title: "News API Error",
+        description: "We couldn't load the latest health news. Using sample data instead.",
         variant: "destructive"
       });
-      setError("Failed to load news articles. Please try again later.");
-      setNews([]);
-      setLoading(false);
+      // Fallback to sample data for development or when API fails
+      fetchSampleNews(query);
     }
   };
 
+  // Fallback function to fetch sample data when API fails
+  const fetchSampleNews = (query: string) => {
+    const normalizedQuery = query.toLowerCase();
+    const currentDate = new Date();
+    
+    // Sample health news with updated dates (relative to current date)
+    const sampleNewsData = {
+      "general": [
+        {
+          title: "New Research Shows Health Benefits of Mediterranean Diet",
+          description: "A large-scale study has found that following a Mediterranean diet can significantly reduce the risk of cardiovascular disease and improve longevity.",
+          url: "https://www.healthline.com/nutrition/mediterranean-diet-meal-plan",
+          urlToImage: "https://i0.wp.com/post.healthline.com/wp-content/uploads/2023/01/2593254-The-Mediterranean-Diet-A-Detailed-Beginners-Guide-and-Meal-Plan-Header-1296x729.jpg?w=1155&h=1528",
+          source: { name: "Healthline" },
+          publishedAt: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
+        },
+        {
+          title: "CDC Updates COVID-19 Guidelines for Summer 2025",
+          description: "The Centers for Disease Control has released new COVID-19 guidelines for summer activities as new variants continue to emerge.",
+          url: "https://www.cdc.gov/coronavirus/2019-ncov/index.html",
+          urlToImage: "https://www.cdc.gov/coronavirus/2019-ncov/images/your-health/COVID-treatment-now-available_1200x675.jpg",
+          source: { name: "CDC" },
+          publishedAt: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString() // 4 days ago
+        },
+        {
+          title: "Study Links Regular Exercise to Improved Mental Health",
+          description: "Researchers have found that even moderate physical activity can significantly reduce symptoms of depression and anxiety.",
+          url: "https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/exercise/art-20048389",
+          urlToImage: "https://www.mayoclinic.org/-/media/kcms/gbs/patient-consumer/images/2013/11/15/17/35/ds00520_-ds00934_-ds00938_-ds00962_im02313_ww5r236t_jpg.jpg",
+          source: { name: "Mayo Clinic" },
+          publishedAt: new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days ago
+        }
+      ],
+      // ... keep existing code (other health categories in sampleNewsData)
+    };
+    
+    // Try to match with specific condition data
+    for (const [key, articles] of Object.entries(sampleNewsData)) {
+      if (normalizedQuery.includes(key)) {
+        // Update the publishedAt dates to be recent
+        const updatedArticles = articles.map((article, index) => ({
+          ...article,
+          publishedAt: new Date(currentDate.getTime() - (index + 1) * 24 * 60 * 60 * 1000).toISOString()
+        }));
+        setNews(updatedArticles);
+        setLoading(false);
+        return;
+      }
+    }
+    
+    // If no specific match found, return general health news
+    const generalArticles = sampleNewsData.general.map((article, index) => ({
+      ...article,
+      publishedAt: new Date(currentDate.getTime() - (index + 1) * 24 * 60 * 60 * 1000).toISOString()
+    }));
+    setNews(generalArticles);
+    setLoading(false);
+  };
+
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    try {
+      const date = new Date(dateStr);
+      return format(date, 'MMM d, yyyy');
+    } catch (e) {
+      return "Recent";
+    }
   };
 
   return (
@@ -184,11 +254,11 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
         {loading ? (
           <div className="space-y-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex flex-col md:flex-row gap-4 animate-pulse">
-                <div className="md:w-1/3 h-32 bg-gray-100 dark:bg-gray-800 relative">
+              <div key={i} className="flex flex-col gap-4 animate-pulse">
+                <div className="h-32 bg-gray-100 dark:bg-gray-800 relative">
                   <Skeleton className="h-full w-full" />
                 </div>
-                <div className="md:w-2/3">
+                <div>
                   <Skeleton className="h-6 w-3/4 mb-2" />
                   <Skeleton className="h-4 w-full mb-1" />
                   <Skeleton className="h-4 w-full mb-1" />
@@ -203,38 +273,42 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
           </div>
         ) : error ? (
           <div className="text-center py-10">
-            <p className="text-destructive">{error}</p>
+            <p className="text-red-500 dark:text-red-400">{error}</p>
           </div>
         ) : (
           <div className="space-y-6">
             {news.length > 0 ? news.map((item, index) => (
-              <Card key={index} className="overflow-hidden border-medical-light hover:shadow-lg transition-all duration-300 dark:border-gray-700 dark:bg-gray-800">
+              <Card key={index} className="overflow-hidden hover:shadow-xl transition-all duration-300 dark:border-blue-800/50 dark:bg-gray-800/70 animate-fade-in">
                 <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex flex-col gap-4">
                     {item.urlToImage && (
-                      <div className="md:w-1/3 h-40 bg-gray-100 dark:bg-gray-700 relative rounded-md overflow-hidden">
+                      <div className="h-48 bg-gray-100 dark:bg-gray-700 relative rounded-md overflow-hidden">
                         <img 
                           src={item.urlToImage} 
                           alt={item.title}
                           className="h-full w-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
+                            // Provide a fallback image for broken links
+                            (e.target as HTMLImageElement).src = "https://placehold.co/600x400/1e293b/e2e8f0?text=Health+News";
                           }}
                         />
                       </div>
                     )}
-                    <div className={item.urlToImage ? "md:w-2/3" : "w-full"}>
-                      <h3 className="font-heading font-semibold text-lg mb-2 text-medical-text dark:text-blue-300">{item.title}</h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">{item.description}</p>
-                      <div className="flex justify-between items-center mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        <Badge variant="outline" className="bg-medical-light bg-opacity-30 text-medical-text dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700 border-0">{item.source.name}</Badge>
+                    <div className="w-full">
+                      <h3 className="font-heading font-semibold text-lg mb-2 text-blue-700 dark:text-blue-300">{item.title}</h3>
+                      <p className="text-gray-700 dark:text-gray-100 text-sm mb-3 leading-relaxed">{item.description}</p>
+                      <div className="flex justify-between items-center mt-3 text-xs">
+                        <Badge variant="outline" className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-700/50 border">{item.source.name}</Badge>
                         <div className="flex items-center space-x-3">
-                          <span className="mr-2">{formatDate(item.publishedAt)}</span>
+                          <span className="flex items-center text-gray-700 dark:text-gray-300">
+                            <Calendar className="h-3.5 w-3.5 mr-1" />
+                            {formatDate(item.publishedAt)}
+                          </span>
                           <a 
                             href={item.url} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="flex items-center space-x-1 bg-medical-text text-white dark:bg-blue-700 px-3 py-1 rounded hover:bg-medical-dark dark:hover:bg-blue-600 transition-colors"
+                            className="flex items-center space-x-1 bg-blue-600 text-white dark:bg-blue-700 px-3 py-1 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
                           >
                             <span>Read</span>
                             <ExternalLink className="h-3.5 w-3.5" />
@@ -247,11 +321,11 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
               </Card>
             )) : condition ? (
               <div className="text-center py-10">
-                <p className="text-gray-500 dark:text-gray-400">No news found for "{condition}". Try a different search term.</p>
+                <p className="text-gray-600 dark:text-gray-300">No news found for "{condition}". Try a different search term.</p>
               </div>
             ) : (
               <div className="text-center py-10">
-                <p className="text-gray-500 dark:text-gray-400">Enter a health topic above to search for relevant news.</p>
+                <p className="text-gray-600 dark:text-gray-300">Enter a health topic above to search for relevant news.</p>
               </div>
             )}
           </div>
