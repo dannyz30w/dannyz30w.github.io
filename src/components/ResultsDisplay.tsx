@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSymptomById } from '@/data/symptoms';
 import { Condition } from '@/data/conditions';
 import { getMedicalAttentionText, getMedicalAttentionColor, getSeverityColor } from '@/utils/symptomMatcher';
-import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X, Search, Pill, AlertOctagon } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X, Search, Pill, AlertOctagon, Users } from 'lucide-react';
 import HealthNews from './HealthNews';
 import { Input } from "./ui/input";
 
