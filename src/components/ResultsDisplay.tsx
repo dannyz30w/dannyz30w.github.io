@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSymptomById } from '@/data/symptoms';
 import { Condition } from '@/data/conditions';
 import { getMedicalAttentionText, getMedicalAttentionColor, getSeverityColor } from '@/utils/symptomMatcher';
-import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X, Search } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X, Search, Pill, AlertOctagon } from 'lucide-react';
 import HealthNews from './HealthNews';
 import { Input } from "./ui/input";
 
@@ -27,6 +27,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
   const [selectedNewsCondition, setSelectedNewsCondition] = useState<Condition | null>(null);
   const [showNews, setShowNews] = useState(false);
   const [newsSearchQuery, setNewsSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<string>("overview");
 
   useEffect(() => {
     // If there are results, expand the first one by default
@@ -50,10 +51,16 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
     }, 100);
   };
 
+  // Check if the user has any medical factors that affect the analysis
+  const hasMedicalFactors = userData.medications?.length > 0 || 
+                           userData.allergies?.length > 0 || 
+                           userData.pastMedicalConditions?.length > 0 || 
+                           userData.familyHistory?.length > 0;
+
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
       <div className="mb-8 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-medical-text mb-3">Symptom Analysis Results</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-medical-text mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Symptom Analysis Results</h2>
         <p className="text-gray-600">Based on the information you provided, here are potential conditions that may match your symptoms</p>
       </div>
 
@@ -66,6 +73,77 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
         </AlertDescription>
       </Alert>
 
+      {hasMedicalFactors && (
+        <div className="mb-6 bg-white rounded-lg shadow p-5 border-l-4 border-l-medical-text">
+          <h3 className="text-lg font-semibold text-medical-text mb-2">Factors Considered in Analysis</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {userData.familyHistory?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-medical-text" />
+                  <h4 className="font-medium text-sm text-gray-700">Family History</h4>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {userData.familyHistory.map((condition: string, i: number) => (
+                    <Badge key={i} variant="outline" className="bg-medical-light/20">
+                      {condition}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {userData.pastMedicalConditions?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <AlertOctagon className="h-4 w-4 text-medical-text" />
+                  <h4 className="font-medium text-sm text-gray-700">Past Medical Conditions</h4>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {userData.pastMedicalConditions.map((condition: string, i: number) => (
+                    <Badge key={i} variant="outline" className="bg-medical-light/20">
+                      {condition}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {userData.medications?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <Pill className="h-4 w-4 text-medical-text" />
+                  <h4 className="font-medium text-sm text-gray-700">Current Medications</h4>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {userData.medications.map((med: string, i: number) => (
+                    <Badge key={i} variant="outline" className="bg-medical-light/20">
+                      {med}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {userData.allergies?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-medical-text" />
+                  <h4 className="font-medium text-sm text-gray-700">Allergies</h4>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {userData.allergies.map((allergy: string, i: number) => (
+                    <Badge key={i} variant="outline" className="bg-medical-light/20">
+                      {allergy}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-6">
         {results.length > 0 ? (
           results.map(({ condition, matchScore }, index) => {
@@ -75,6 +153,13 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
             const familyHistoryMatch = userData.familyHistory && userData.familyHistory.some(history => 
               condition.name.toLowerCase().includes(history.toLowerCase())
             );
+            
+            // Check for medical history matches
+            const pastConditionMatch = userData.pastMedicalConditions && 
+              userData.pastMedicalConditions.some(history => 
+                condition.name.toLowerCase().includes(history.toLowerCase()) ||
+                (condition.description && condition.description.toLowerCase().includes(history.toLowerCase()))
+              );
             
             // Apply family history bonus for UI display
             const displayScore = Math.min(100, familyHistoryMatch ? matchScore + 5 : matchScore);
@@ -95,6 +180,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                       </Badge>
                       {familyHistoryMatch && (
                         <Badge className="bg-purple-100 text-purple-700 border border-purple-300">Family History</Badge>
+                      )}
+                      {pastConditionMatch && (
+                        <Badge className="bg-amber-100 text-amber-700 border border-amber-300">Medical History</Badge>
                       )}
                       {userData.symptoms.length > 0 && (
                         <Badge className="bg-gray-100 text-gray-700 border border-gray-300">
@@ -136,9 +224,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                 </div>
 
                 {isExpanded && (
-                  <CardContent className="bg-gray-50 border-t border-gray-100 p-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
+                  <CardContent className="bg-gray-50 border-t border-gray-100 p-0">
+                    <Tabs 
+                      value={activeTab} 
+                      onValueChange={setActiveTab} 
+                      className="w-full"
+                    >
+                      <TabsList className="w-full rounded-none border-b bg-white">
+                        <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
+                        <TabsTrigger value="symptoms" className="flex-1">Symptoms</TabsTrigger>
+                        <TabsTrigger value="management" className="flex-1">Management</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="overview" className="p-5 pt-4">
                         <h4 className="font-semibold text-gray-700 mb-2">Description</h4>
                         <p className="text-gray-600 text-sm leading-relaxed">{condition.description}</p>
                         
@@ -165,67 +263,92 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                             See Recent News
                           </Button>
                         </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-semibold text-gray-700 mb-2">Matching Symptoms</h4>
-                        <div className="grid grid-cols-1 gap-2">
-                          {matchedSymptoms.length > 0 ? (
-                            matchedSymptoms.map(symptomId => {
-                              const symptom = getSymptomById(symptomId);
-                              return symptom ? (
-                                <div key={symptomId} className="flex items-start space-x-2">
-                                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                                  <div>
-                                    <span className="text-sm text-gray-700">{symptom.name}</span>
-                                    {symptom.description && (
-                                      <p className="text-xs text-gray-500">{symptom.description}</p>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : null;
-                            })
-                          ) : (
-                            <p className="text-sm text-gray-500">No matching symptoms found.</p>
-                          )}
-                        </div>
-
-                        {unmatchedSymptoms.length > 0 && (
-                          <>
-                            <h4 className="font-semibold text-gray-700 mt-4 mb-2">Other Common Symptoms</h4>
+                      </TabsContent>
+                      
+                      <TabsContent value="symptoms" className="p-5 pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="font-semibold text-gray-700 mb-2">Matching Symptoms</h4>
                             <div className="grid grid-cols-1 gap-2">
-                              {unmatchedSymptoms.slice(0, 5).map(symptomId => {
-                                const symptom = getSymptomById(symptomId);
-                                return symptom ? (
-                                  <div key={symptomId} className="flex items-start space-x-2">
-                                    <AlertCircle className="h-4 w-4 text-gray-400 mt-0.5" />
-                                    <span className="text-sm text-gray-500">{symptom.name}</span>
-                                  </div>
-                                ) : null;
-                              })}
+                              {matchedSymptoms.length > 0 ? (
+                                matchedSymptoms.map(symptomId => {
+                                  const symptom = getSymptomById(symptomId);
+                                  return symptom ? (
+                                    <div key={symptomId} className="flex items-start space-x-2">
+                                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                                      <div>
+                                        <span className="text-sm text-gray-700">{symptom.name}</span>
+                                        {symptom.description && (
+                                          <p className="text-xs text-gray-500">{symptom.description}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : null;
+                                })
+                              ) : (
+                                <p className="text-sm text-gray-500">No matching symptoms found.</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-semibold text-gray-700 mb-2">Other Common Symptoms</h4>
+                            <div className="grid grid-cols-1 gap-2">
+                              {unmatchedSymptoms.length > 0 ? (
+                                unmatchedSymptoms.slice(0, 5).map(symptomId => {
+                                  const symptom = getSymptomById(symptomId);
+                                  return symptom ? (
+                                    <div key={symptomId} className="flex items-start space-x-2">
+                                      <AlertCircle className="h-4 w-4 text-gray-400 mt-0.5" />
+                                      <span className="text-sm text-gray-500">{symptom.name}</span>
+                                    </div>
+                                  ) : null;
+                                })
+                              ) : (
+                                <p className="text-sm text-gray-500">No additional symptoms to show.</p>
+                              )}
                               {unmatchedSymptoms.length > 5 && (
                                 <div className="text-sm text-gray-500 italic">
                                   + {unmatchedSymptoms.length - 5} more symptoms
                                 </div>
                               )}
                             </div>
-                          </>
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="management" className="p-5 pt-4">
+                        <h4 className="font-semibold text-gray-700 mb-2">Prevention & Management</h4>
+                        {condition.preventionTips && condition.preventionTips.length > 0 ? (
+                          <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
+                            {condition.preventionTips.map((tip, index) => (
+                              <li key={index}>{tip}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500">No specific prevention tips available for this condition.</p>
                         )}
-                      </div>
-                    </div>
-
-                    <div className="mt-5 pt-4 border-t border-gray-200">
-                      <h4 className="font-semibold text-gray-700 mb-2">Prevention & Management</h4>
-                      {condition.preventionTips && condition.preventionTips.length > 0 ? (
-                        <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
-                          {condition.preventionTips.map((tip, index) => (
-                            <li key={index}>{tip}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-gray-500">No specific prevention tips available for this condition.</p>
-                      )}
-                    </div>
+                        
+                        {/* Add medical attention info again on this tab */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <h4 className="font-semibold text-gray-700 mb-2">When to Seek Medical Care</h4>
+                          <div className="bg-gray-100 p-3 rounded-md border border-gray-200">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="h-5 w-5 mt-0.5 text-medical-text" />
+                              <p className="text-sm text-gray-600">
+                                <strong className="text-medical-text">
+                                  {getMedicalAttentionText(condition.seekMedicalAttention)}
+                                </strong>
+                                <br />
+                                {condition.seekMedicalAttention === 'immediately' && (
+                                  <span className="text-red-600">If you're experiencing severe symptoms, please contact emergency services or visit your nearest emergency room.</span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </CardContent>
                 )}
               </Card>

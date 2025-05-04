@@ -2,20 +2,31 @@
 import React, { useState } from 'react';
 import HealthNews from './HealthNews';
 import { Search } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from 'lucide-react';
 
 const NewsSection: React.FC = () => {
   const [selectedCondition, setSelectedCondition] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [apiErrorShown, setApiErrorShown] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSelectedCondition(searchQuery);
   };
 
+  // Show error message about NewsAPI limitations
+  const showApiErrorInfo = () => {
+    setApiErrorShown(true);
+  };
+
   // Popular health topics
   const popularTopics = [
     "Diabetes", "Heart Disease", "COVID-19", "Cancer", 
-    "Mental Health", "Nutrition", "Fitness", "Pregnancy"
+    "Mental Health", "Nutrition", "Fitness", "Pregnancy",
+    "Alzheimer's", "Arthritis", "Asthma", "Autism",
+    "Cholesterol", "Depression", "Eczema", "GERD"
   ];
 
   return (
@@ -43,10 +54,30 @@ const NewsSection: React.FC = () => {
           <button 
             type="submit" 
             className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-r-lg font-medium hover:opacity-90 transition-all"
+            onClick={showApiErrorInfo}
           >
             Search
           </button>
         </form>
+        
+        {apiErrorShown && (
+          <Alert className="mb-6 bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800">News API Limitation</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              NewsAPI's developer plan only allows requests from localhost. In a production environment, this would be handled through a server-side API.
+              For this demo, we're showing sample news articles instead.
+            </AlertDescription>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 text-amber-800 border-amber-300"
+              onClick={() => setApiErrorShown(false)}
+            >
+              Dismiss
+            </Button>
+          </Alert>
+        )}
         
         <div className="flex flex-wrap gap-2 justify-center mb-6">
           {popularTopics.map((topic, index) => (
@@ -55,6 +86,9 @@ const NewsSection: React.FC = () => {
               onClick={() => {
                 setSearchQuery(topic);
                 setSelectedCondition(topic);
+                if (!apiErrorShown) {
+                  showApiErrorInfo();
+                }
               }}
               className="bg-medical-light bg-opacity-70 hover:bg-opacity-100 text-medical-text px-3 py-1.5 rounded-full text-sm transition-colors"
             >

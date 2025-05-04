@@ -36,26 +36,28 @@ export function matchConditions(userData: UserData, conditionsList: Condition[])
       ? (symptomMatchCount / condition.symptoms.length) 
       : 0;
     
-    // Weight the symptom match heavily (up to 70 points)
-    score += symptomPercentage * 70;
+    // Weight the symptom match heavily (up to 65 points)
+    score += symptomPercentage * 65;
     
-    // Age match (up to 15 points)
+    // Age match (up to 10 points)
     const ageMatch = condition.riskFactors?.age 
       ? isAgeInRange(userData.age, condition.riskFactors.age) 
       : true;
-    if (ageMatch) score += 15;
+    if (ageMatch) score += 10;
     
-    // Gender match (up to 15 points)
+    // Gender match (up to 10 points)
     const genderMatch = condition.riskFactors?.gender 
       ? condition.riskFactors.gender === userData.gender || condition.riskFactors.gender === 'any' 
       : true;
-    if (genderMatch) score += 15;
+    if (genderMatch) score += 10;
 
     // Adjust score for severity considering symptom duration
     if (userData.duration > 14 && condition.severity === 'mild') {
       score -= 10; // Reduce score for mild conditions if symptoms persisted long
     } else if (userData.duration < 2 && condition.severity === 'severe') {
       score -= 5; // Slightly reduce score for severe conditions if symptoms just started
+    } else if (userData.duration > 30 && condition.severity === 'severe') {
+      score += 5; // Increase score for severe conditions if symptoms have persisted for a long time
     }
     
     // Family history match bonus (up to 10 extra points)
@@ -70,16 +72,53 @@ export function matchConditions(userData: UserData, conditionsList: Condition[])
       }
     }
     
-    // Past medical conditions consideration
+    // Past medical conditions consideration (up to 7 points)
     if (userData.pastMedicalConditions && userData.pastMedicalConditions.length > 0) {
       const relatedConditionMatch = userData.pastMedicalConditions.some(pastCondition => {
         const pastConditionLower = pastCondition.toLowerCase();
-        return condition.name.toLowerCase().includes(pastConditionLower);
+        // Check if condition name or description contains the past condition
+        const nameMatch = condition.name.toLowerCase().includes(pastConditionLower);
+        const descriptionMatch = condition.description ? 
+          condition.description.toLowerCase().includes(pastConditionLower) : false;
+          
+        // Check if there are related conditions (like diabetes and heart disease)
+        const relatedConditions = getRelatedConditions(pastConditionLower);
+        const relatedMatch = relatedConditions.some(related => 
+          condition.name.toLowerCase().includes(related) || 
+          (condition.description && condition.description.toLowerCase().includes(related))
+        );
+        
+        return nameMatch || descriptionMatch || relatedMatch;
       });
       
       if (relatedConditionMatch) {
+        score += 7;
+      }
+    }
+    
+    // Medications consideration (up to 5 points)
+    if (userData.medications && userData.medications.length > 0) {
+      // Some medications could indicate certain conditions are already being treated
+      const medicationRelatedCondition = userData.medications.some(med => {
+        const medLower = med.toLowerCase();
+        const conditionRelatedToMed = getMedicationRelatedConditions(medLower);
+        
+        return conditionRelatedToMed.some(related => 
+          condition.name.toLowerCase().includes(related.toLowerCase())
+        );
+      });
+      
+      if (medicationRelatedCondition) {
         score += 5;
       }
+    }
+    
+    // Allergies consideration (up to 3 points)
+    if (userData.allergies && userData.allergies.length > 0 && 
+        (condition.name.toLowerCase().includes('allerg') || 
+         condition.name.toLowerCase().includes('asthma') || 
+         condition.name.toLowerCase().includes('immun'))) {
+      score += 3;
     }
     
     // Only return conditions with a reasonable match
@@ -104,6 +143,66 @@ function isAgeInRange(age: number, range: {min?: number, max?: number}): boolean
   const minMatch = range.min === undefined || age >= range.min;
   const maxMatch = range.max === undefined || age <= range.max;
   return minMatch && maxMatch;
+}
+
+// Helper function to get related conditions for common comorbidities
+function getRelatedConditions(condition: string): string[] {
+  const comorbidityMap: Record<string, string[]> = {
+    'diabetes': ['heart disease', 'kidney disease', 'neuropathy', 'retinopathy'],
+    'hypertension': ['heart disease', 'stroke', 'kidney disease'],
+    'heart disease': ['hypertension', 'diabetes', 'high cholesterol'],
+    'asthma': ['copd', 'bronchitis', 'respiratory', 'allergy'],
+    'depression': ['anxiety', 'insomnia', 'bipolar'],
+    'arthritis': ['osteoporosis', 'inflammation', 'autoimmune'],
+    'obesity': ['diabetes', 'heart disease', 'sleep apnea', 'hypertension'],
+    'cancer': ['anemia', 'immune', 'fatigue'],
+  };
+  
+  // Find potential related conditions
+  for (const [key, relatedList] of Object.entries(comorbidityMap)) {
+    if (condition.includes(key)) {
+      return relatedList;
+    }
+  }
+  
+  return [];
+}
+
+// Helper function to get conditions that might be associated with certain medications
+function getMedicationRelatedConditions(medication: string): string[] {
+  const medicationMap: Record<string, string[]> = {
+    'lisinopril': ['hypertension', 'heart disease'],
+    'atorvastatin': ['high cholesterol', 'heart disease'],
+    'lipitor': ['high cholesterol', 'heart disease'],
+    'metformin': ['diabetes'],
+    'albuterol': ['asthma', 'copd', 'respiratory'],
+    'ventolin': ['asthma', 'copd', 'respiratory'],
+    'levothyroxine': ['hypothyroidism', 'thyroid'],
+    'synthroid': ['hypothyroidism', 'thyroid'],
+    'insulin': ['diabetes'],
+    'sertraline': ['depression', 'anxiety'],
+    'zoloft': ['depression', 'anxiety'],
+    'fluoxetine': ['depression', 'anxiety'],
+    'prozac': ['depression', 'anxiety'],
+    'ibuprofen': ['pain', 'inflammation', 'arthritis'],
+    'advil': ['pain', 'inflammation', 'arthritis'],
+    'acetaminophen': ['pain', 'fever'],
+    'tylenol': ['pain', 'fever'],
+    'omeprazole': ['gerd', 'acid reflux', 'ulcer'],
+    'prilosec': ['gerd', 'acid reflux', 'ulcer'],
+    'warfarin': ['blood clot', 'stroke prevention', 'atrial fibrillation'],
+    'coumadin': ['blood clot', 'stroke prevention', 'atrial fibrillation'],
+    'prednisone': ['inflammation', 'autoimmune', 'allergic', 'asthma'],
+  };
+  
+  // Look for medication matches
+  for (const [key, conditionList] of Object.entries(medicationMap)) {
+    if (medication.includes(key)) {
+      return conditionList;
+    }
+  }
+  
+  return [];
 }
 
 export function getSeverityColor(severity: Condition['severity']) {
