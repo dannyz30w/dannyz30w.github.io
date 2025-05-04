@@ -24,7 +24,7 @@ const NewsSection: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8 animate-fade-in">
-        <h2 className="text-3xl font-heading font-bold mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-medical-text dark:from-blue-400 dark:to-blue-300">
+        <h2 className="text-3xl font-heading font-bold mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary dark:from-blue-400 dark:to-blue-300">
           Latest Health News
         </h2>
         <p className="text-gray-600 dark:text-gray-300 mb-6 text-center max-w-2xl mx-auto">
@@ -59,7 +59,7 @@ const NewsSection: React.FC = () => {
                 setSearchQuery(topic);
                 setSelectedCondition(topic);
               }}
-              className="bg-medical-light bg-opacity-70 hover:bg-opacity-100 text-medical-text px-3 py-1.5 rounded-full text-sm transition-colors dark:bg-blue-900 dark:bg-opacity-50 dark:hover:bg-opacity-70 dark:text-blue-200 hover:scale-105 duration-200 transform"
+              className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1.5 rounded-full text-sm transition-colors dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 hover:scale-105 duration-200 transform"
             >
               {topic}
             </button>
