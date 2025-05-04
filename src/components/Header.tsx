@@ -10,26 +10,29 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm py-4 px-6 sticky top-0 z-50">
+    <header className="bg-white shadow-md py-4 px-6 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-full shadow-md">
             <Compass className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-xl md:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl font-heading font-bold bg-gradient-to-r from-primary to-medical-text bg-clip-text text-transparent">
             Health Compass
           </h1>
         </div>
         
-        <nav className="hidden md:flex items-center space-x-6">
-          <a href="#" className="text-gray-700 hover:text-primary transition-colors font-medium">
+        <nav className="hidden md:flex items-center space-x-8">
+          <a href="#" className="text-gray-700 hover:text-primary transition-colors font-medium relative group">
             Home
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
           </a>
-          <a href="#news" className="text-gray-700 hover:text-primary transition-colors font-medium">
+          <a href="#news" className="text-gray-700 hover:text-primary transition-colors font-medium relative group">
             Health News
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
           </a>
-          <a href="#about" className="text-gray-700 hover:text-primary transition-colors font-medium">
+          <a href="#about" className="text-gray-700 hover:text-primary transition-colors font-medium relative group">
             About
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
           </a>
         </nav>
         

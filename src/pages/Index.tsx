@@ -5,17 +5,16 @@ import Footer from '@/components/Footer';
 import SymptomChecker from '@/components/SymptomChecker';
 import MedicalDisclaimer from '@/components/MedicalDisclaimer';
 import NewsSection from '@/components/NewsSection';
-import AIChat from '@/components/AIChat';
 
 const Index = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-white to-blue-50">
       <Header />
       
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 md:px-6 py-8">
         <section className="mb-10">
           <div className="text-center max-w-2xl mx-auto slide-in">
-            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-6">
               Health Compass
             </h1>
             <p className="text-gray-600 text-lg md:text-xl">
@@ -27,17 +26,17 @@ const Index = () => {
         
         <MedicalDisclaimer />
         
-        <section className="mt-10">
+        <section className="mt-12">
           <SymptomChecker />
         </section>
         
-        <section id="news" className="mt-16 px-4 py-10 bg-white rounded-xl shadow-md">
+        <section id="news" className="mt-20 px-6 py-12 bg-white rounded-xl shadow-lg">
           <NewsSection />
         </section>
         
-        <section id="about" className="mt-16 px-4 py-10 bg-white rounded-xl shadow-md">
+        <section id="about" className="mt-16 px-6 py-12 bg-white rounded-xl shadow-lg">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-primary mb-4">
+            <h2 className="text-3xl font-bold text-primary mb-6 text-center">
               About Health Compass
             </h2>
             <p className="text-gray-600 mb-4">
@@ -69,7 +68,6 @@ const Index = () => {
       </main>
       
       <Footer />
-      <AIChat />
     </div>
   );
 };

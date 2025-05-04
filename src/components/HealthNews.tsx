@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 interface NewsItem {
   title: string;
@@ -25,44 +26,45 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!condition || condition.trim() === '') return;
     
-    fetchRealNews(condition);
+    fetchNews(condition);
   }, [condition]);
 
-  const fetchRealNews = async (query: string) => {
+  const fetchNews = async (query: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      // We're using the GNews API as an example - in a real app, you would use your own API key
-      // Free public endpoint with limited results for demo purposes
-      const response = await fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}+health+medical&lang=en&max=10&apikey=9603c17cfae1069a0bea54f3d4148fa0`);
+      // Using free NewsAPI
+      const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}+health+medical&language=en&pageSize=10&sortBy=publishedAt&apiKey=bb3a36bf011e47789d15c7012fe9dfc5`;
+      const response = await fetch(url);
       const data = await response.json();
       
-      if (data.errors) {
-        setError('Failed to load news articles. Please try again later.');
+      if (data.status === 'error') {
+        toast({
+          title: "Error fetching news",
+          description: data.message || "Failed to load news articles",
+          variant: "destructive"
+        });
         setNews([]);
+        setError("Failed to load news articles. Please try again later.");
       } else if (data.articles && data.articles.length > 0) {
-        setNews(data.articles.map((article: any) => ({
-          title: article.title,
-          description: article.description,
-          url: article.url,
-          urlToImage: article.image,
-          source: {
-            name: article.source?.name || 'Unknown Source'
-          },
-          publishedAt: article.publishedAt
-        })));
+        setNews(data.articles);
       } else {
-        // If no results found for the specific query
         setNews([]);
       }
     } catch (err) {
       console.error('Error fetching news:', err);
-      setError('Failed to load news articles. Please try again later.');
+      toast({
+        title: "Error",
+        description: "Failed to load news articles. Please try again later.",
+        variant: "destructive"
+      });
+      setError("Failed to load news articles. Please try again later.");
       setNews([]);
     } finally {
       setLoading(false);
@@ -78,7 +80,7 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
     <div className="space-y-4">
       {condition && <h3 className="text-xl font-medium">Results for: "{condition}"</h3>}
       
-      <ScrollArea className="h-[450px]">
+      <ScrollArea className="h-[500px] pr-4">
         {loading ? (
           <div className="space-y-6">
             {[1, 2, 3].map((i) => (
@@ -106,11 +108,11 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
         ) : (
           <div className="space-y-6">
             {news.length > 0 ? news.map((item, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+              <Card key={index} className="overflow-hidden border-medical-light hover:shadow-lg transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="flex flex-col md:flex-row gap-4">
                     {item.urlToImage && (
-                      <div className="md:w-1/3 h-32 bg-gray-100 relative">
+                      <div className="md:w-1/3 h-40 bg-gray-100 relative rounded-md overflow-hidden">
                         <img 
                           src={item.urlToImage} 
                           alt={item.title}
@@ -122,19 +124,20 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
                       </div>
                     )}
                     <div className={item.urlToImage ? "md:w-2/3" : "w-full"}>
-                      <h3 className="font-heading font-semibold text-lg mb-2">{item.title}</h3>
+                      <h3 className="font-heading font-semibold text-lg mb-2 text-medical-text">{item.title}</h3>
                       <p className="text-gray-600 text-sm mb-3">{item.description}</p>
                       <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-                        <Badge variant="outline">{item.source.name}</Badge>
-                        <div className="flex items-center">
+                        <Badge variant="outline" className="bg-medical-light bg-opacity-30 text-medical-text border-0">{item.source.name}</Badge>
+                        <div className="flex items-center space-x-3">
                           <span className="mr-2">{formatDate(item.publishedAt)}</span>
                           <a 
                             href={item.url} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-primary hover:text-primary/80 flex items-center"
+                            className="flex items-center space-x-1 bg-medical-text text-white px-3 py-1 rounded hover:bg-medical-dark transition-colors"
                           >
-                            <ExternalLink className="h-4 w-4" />
+                            <span>Read</span>
+                            <ExternalLink className="h-3.5 w-3.5" />
                           </a>
                         </div>
                       </div>
