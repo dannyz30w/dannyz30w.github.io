@@ -41,23 +41,29 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
     setError(null);
     
     try {
-      // Using GNews API which has a generous free tier
-      const response = await fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&country=us&max=10&topic=health&apikey=97b97327000e91189301c7819ab5f97c`);
+      // Using Newsdata.io API which has a generous free tier
+      const response = await fetch(`https://newsdata.io/api/1/news?apikey=pub_35586167c522ac3a9fa2ee55e0f4a113b9f77&q=${encodeURIComponent(query)}&language=en&category=health`);
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
-      if (data.errors || data.error) {
-        throw new Error(data.errors?.[0] || data.error || 'Failed to fetch news');
+      if (data.status === "error" || !data.results) {
+        console.error("API error:", data);
+        throw new Error(data.message || "Failed to fetch news");
       }
 
-      if (data.articles && Array.isArray(data.articles) && data.articles.length > 0) {
-        // Transform the GNews API data structure to match our NewsItem interface
-        const formattedArticles = data.articles.map((article: any) => ({
+      if (data.results && Array.isArray(data.results) && data.results.length > 0) {
+        // Transform the Newsdata.io API response to match our NewsItem interface
+        const formattedArticles = data.results.map((article: any) => ({
           title: article.title,
-          description: article.description || article.content,
-          url: article.url,
-          urlToImage: article.image,
-          source: { name: article.source?.name || "Health News" },
-          publishedAt: article.publishedAt
+          description: article.description || article.content || "Read more for details.",
+          url: article.link,
+          urlToImage: article.image_url,
+          source: { name: article.source_id || "Health News" },
+          publishedAt: article.pubDate
         }));
         setNews(formattedArticles);
         console.log("Fetched news:", formattedArticles);
@@ -66,7 +72,6 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
         // If no articles found or API failed, use sample data
         fetchSampleNews(query);
       }
-      setLoading(false);
     } catch (err) {
       console.error('Error fetching news:', err);
       toast({
@@ -76,6 +81,8 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
       });
       // Fallback to sample data
       fetchSampleNews(query);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,7 +90,7 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
   const fetchSampleNews = (query: string) => {
     const normalizedQuery = query.toLowerCase();
     
-    // Get current date and recent dates for realistic timestamps
+    // Get current date for realistic timestamps
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -220,7 +227,7 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
 
   return (
     <div className="space-y-4">
-      {condition && <h3 className="text-xl font-medium text-gray-800 dark:text-gray-100">Results for: "{condition}"</h3>}
+      {condition && <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-3">Results for: "{condition}"</h3>}
       
       <ScrollArea className="h-[500px] pr-4 overflow-hidden">
         {loading ? (
@@ -247,7 +254,7 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
           <div className="text-center py-10 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-2" />
             <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-2">Please try another search term</p>
+            <p className="text-gray-700 dark:text-white mt-2">Please try another search term</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -269,12 +276,12 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
                       </div>
                     )}
                     <div className="w-full">
-                      <h3 className="font-heading font-semibold text-lg mb-2 text-blue-600 dark:text-blue-400">{item.title}</h3>
-                      <p className="text-gray-700 dark:text-gray-100 text-sm mb-3 leading-relaxed">{item.description}</p>
+                      <h3 className="font-heading font-semibold text-lg mb-2 text-blue-600 dark:text-blue-300">{item.title}</h3>
+                      <p className="text-gray-700 dark:text-white text-sm mb-3 leading-relaxed">{item.description}</p>
                       <div className="flex justify-between items-center mt-3 text-xs">
                         <Badge variant="outline" className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-700/50 border">{item.source.name}</Badge>
                         <div className="flex items-center space-x-3">
-                          <span className="flex items-center text-gray-700 dark:text-gray-200">
+                          <span className="flex items-center text-gray-700 dark:text-gray-100">
                             <Calendar className="h-3.5 w-3.5 mr-1" />
                             {formatDate(item.publishedAt)}
                           </span>
@@ -295,11 +302,11 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
               </Card>
             )) : condition ? (
               <div className="text-center py-10 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                <p className="text-gray-600 dark:text-gray-200">No news found for "{condition}". Try a different search term.</p>
+                <p className="text-gray-600 dark:text-white">No news found for "{condition}". Try a different search term.</p>
               </div>
             ) : (
               <div className="text-center py-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-gray-600 dark:text-gray-200">Enter a health topic above to search for relevant news.</p>
+                <p className="text-gray-600 dark:text-white">Enter a health topic above to search for relevant news.</p>
               </div>
             )}
           </div>

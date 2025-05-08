@@ -23,10 +23,10 @@ const NewsSection: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8 animate-fade-in">
-        <h2 className="text-3xl font-heading font-bold mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary dark:from-blue-400 dark:to-blue-300">
+        <h2 className="text-3xl font-heading font-bold mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary dark:from-blue-300 dark:to-blue-200">
           Latest Health News
         </h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-6 text-center max-w-2xl mx-auto">
+        <p className="text-gray-800 dark:text-white mb-6 text-center max-w-2xl mx-auto">
           Stay informed with the latest developments in healthcare and medical research.
           Search for specific health topics to find relevant and recent news articles.
         </p>
@@ -39,12 +39,12 @@ const NewsSection: React.FC = () => {
               placeholder="Search health news topics..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-grow pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-l-lg w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-gray-200"
+              className="flex-grow pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-l-lg w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
             />
           </div>
           <button 
             type="submit" 
-            className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-r-lg font-medium hover:opacity-90 transition-all dark:from-blue-600 dark:to-blue-800 dark:hover:from-blue-700 dark:hover:to-blue-900"
+            className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-r-lg font-medium hover:opacity-90 transition-all dark:from-blue-500 dark:to-blue-700 dark:hover:from-blue-600 dark:hover:to-blue-800"
           >
             Search
           </button>
@@ -58,7 +58,7 @@ const NewsSection: React.FC = () => {
                 setSearchQuery(topic);
                 setSelectedCondition(topic);
               }}
-              className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1.5 rounded-full text-sm transition-colors dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 hover:scale-105 duration-200 transform"
+              className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1.5 rounded-full text-sm transition-colors dark:bg-blue-800 dark:text-blue-100 dark:hover:bg-blue-700 hover:scale-105 duration-200 transform"
             >
               {topic}
             </button>
