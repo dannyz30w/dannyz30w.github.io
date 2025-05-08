@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import HealthNews from './HealthNews';
 import { Search } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 
 const NewsSection: React.FC = () => {
   const [selectedCondition, setSelectedCondition] = useState('');

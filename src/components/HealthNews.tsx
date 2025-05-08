@@ -4,9 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Calendar } from 'lucide-react';
+import { ExternalLink, Calendar, AlertCircle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface NewsItem {
   title: string;
@@ -41,26 +41,28 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
     setError(null);
     
     try {
-      // For this version, we'll use a more reliable public API (News API)
-      const response = await fetch(`https://api.thenewsapi.com/v1/news/all?api_token=K2Yd3yBWcZZweFnHDSwJPQVbpWy2hyKdDlO5zcqI&search=${encodeURIComponent(query)}&language=en&limit=10&categories=health`);
+      // Using GNews API which has a generous free tier
+      const response = await fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&country=us&max=10&topic=health&apikey=97b97327000e91189301c7819ab5f97c`);
       const data = await response.json();
       
       if (data.errors || data.error) {
         throw new Error(data.errors?.[0] || data.error || 'Failed to fetch news');
       }
 
-      if (data.data && Array.isArray(data.data)) {
-        // Transform the TheNewsAPI data structure to match our NewsItem interface
-        const formattedArticles = data.data.map((article: any) => ({
+      if (data.articles && Array.isArray(data.articles) && data.articles.length > 0) {
+        // Transform the GNews API data structure to match our NewsItem interface
+        const formattedArticles = data.articles.map((article: any) => ({
           title: article.title,
-          description: article.description || article.snippet,
+          description: article.description || article.content,
           url: article.url,
-          urlToImage: article.image_url,
-          source: { name: article.source || "Health News" },
-          publishedAt: article.published_at
+          urlToImage: article.image,
+          source: { name: article.source?.name || "Health News" },
+          publishedAt: article.publishedAt
         }));
         setNews(formattedArticles);
+        console.log("Fetched news:", formattedArticles);
       } else {
+        console.log("No articles found, using sample data");
         // If no articles found or API failed, use sample data
         fetchSampleNews(query);
       }
@@ -80,7 +82,6 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
   // Enhanced fallback function with up-to-date and realistic sample news
   const fetchSampleNews = (query: string) => {
     const normalizedQuery = query.toLowerCase();
-    const currentDate = new Date();
     
     // Get current date and recent dates for realistic timestamps
     const today = new Date();
@@ -114,7 +115,7 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
         },
         {
           title: "CDC Updates Guidelines for Physical Activity in Adults",
-          description: "New guidelines recommend at least 150 minutes of moderate-intensity exercise per week, with additional emphasis on muscle-strengthening activities.",
+          description: "New CDC guidelines recommend at least 150 minutes of moderate-intensity exercise per week, with additional emphasis on muscle-strengthening activities.",
           url: "https://www.cdc.gov/physicalactivity/index.html",
           urlToImage: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?q=80&w=2000&auto=format&fit=crop",
           source: { name: "CDC" },
@@ -211,8 +212,7 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
 
   const formatDate = (dateStr: string) => {
     try {
-      const date = new Date(dateStr);
-      return format(date, 'MMM d, yyyy');
+      return format(parseISO(dateStr), 'MMM d, yyyy');
     } catch (e) {
       return "Recent";
     }
@@ -244,8 +244,10 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-10">
-            <p className="text-red-500 dark:text-red-400">{error}</p>
+          <div className="text-center py-10 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-2" />
+            <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-2">Please try another search term</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -267,12 +269,12 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
                       </div>
                     )}
                     <div className="w-full">
-                      <h3 className="font-heading font-semibold text-lg mb-2 text-blue-600 dark:text-blue-300">{item.title}</h3>
-                      <p className="text-gray-700 dark:text-gray-200 text-sm mb-3 leading-relaxed">{item.description}</p>
+                      <h3 className="font-heading font-semibold text-lg mb-2 text-blue-600 dark:text-blue-400">{item.title}</h3>
+                      <p className="text-gray-700 dark:text-gray-100 text-sm mb-3 leading-relaxed">{item.description}</p>
                       <div className="flex justify-between items-center mt-3 text-xs">
                         <Badge variant="outline" className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-700/50 border">{item.source.name}</Badge>
                         <div className="flex items-center space-x-3">
-                          <span className="flex items-center text-gray-700 dark:text-gray-300">
+                          <span className="flex items-center text-gray-700 dark:text-gray-200">
                             <Calendar className="h-3.5 w-3.5 mr-1" />
                             {formatDate(item.publishedAt)}
                           </span>
@@ -292,12 +294,12 @@ const HealthNews: React.FC<HealthNewsProps> = ({ condition }) => {
                 </CardContent>
               </Card>
             )) : condition ? (
-              <div className="text-center py-10">
-                <p className="text-gray-600 dark:text-gray-300">No news found for "{condition}". Try a different search term.</p>
+              <div className="text-center py-10 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                <p className="text-gray-600 dark:text-gray-200">No news found for "{condition}". Try a different search term.</p>
               </div>
             ) : (
-              <div className="text-center py-10">
-                <p className="text-gray-600 dark:text-gray-300">Enter a health topic above to search for relevant news.</p>
+              <div className="text-center py-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="text-gray-600 dark:text-gray-200">Enter a health topic above to search for relevant news.</p>
               </div>
             )}
           </div>
