@@ -13,7 +13,7 @@ export interface Condition {
   description: string;
   symptoms: string[];
   severity: 'mild' | 'moderate' | 'severe';
-  seekMedicalAttention: 'immediately' | 'soon' | 'if worsens' | 'self-manageable';
+  seekMedicalAttention: 'immediately' | 'within24Hours' | 'withinWeek' | 'selfCare';
   preventionTips?: string[];
   ageRange?: {
     min: number;

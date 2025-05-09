@@ -125,15 +125,15 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
 /**
  * Returns a text description based on the medical attention level
  */
-export const getMedicalAttentionText = (level: 'immediately' | 'soon' | 'if worsens' | 'self-manageable'): string => {
+export const getMedicalAttentionText = (level: 'immediately' | 'within24Hours' | 'withinWeek' | 'selfCare'): string => {
   switch (level) {
     case 'immediately':
       return 'Seek Medical Attention Immediately';
-    case 'soon':
+    case 'within24Hours':
       return 'Seek Medical Attention Soon';
-    case 'if worsens':
+    case 'withinWeek':
       return 'Seek Medical Attention If Symptoms Worsen';
-    case 'self-manageable':
+    case 'selfCare':
       return 'Self-Manageable Condition';
     default:
       return 'Consult with a Healthcare Provider';
@@ -143,15 +143,15 @@ export const getMedicalAttentionText = (level: 'immediately' | 'soon' | 'if wors
 /**
  * Returns the appropriate color class based on the medical attention level
  */
-export const getMedicalAttentionColor = (level: 'immediately' | 'soon' | 'if worsens' | 'self-manageable'): string => {
+export const getMedicalAttentionColor = (level: 'immediately' | 'within24Hours' | 'withinWeek' | 'selfCare'): string => {
   switch (level) {
     case 'immediately':
       return 'bg-red-600';
-    case 'soon':
+    case 'within24Hours':
       return 'bg-orange-500';
-    case 'if worsens':
+    case 'withinWeek':
       return 'bg-yellow-500';
-    case 'self-manageable':
+    case 'selfCare':
       return 'bg-green-500';
     default:
       return 'bg-blue-500';
