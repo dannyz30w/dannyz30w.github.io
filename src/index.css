@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -134,7 +135,7 @@
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -154,9 +155,11 @@
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.85;
+    transform: scale(1.05);
   }
 }
 
@@ -181,11 +184,11 @@
 }
 
 .slide-in {
-  animation: slideIn 0.5s ease-out forwards;
+  animation: slideIn 0.7s ease-out forwards;
 }
 
 .fade-in {
-  animation: fadeIn 0.7s ease-out forwards;
+  animation: fadeIn 1s ease-out forwards;
 }
 
 .scale-in {
@@ -193,7 +196,7 @@
 }
 
 .animate-pulse-subtle {
-  animation: pulse 2s infinite;
+  animation: pulse 3s ease-in-out infinite;
 }
 
 .animate-float {
@@ -202,7 +205,7 @@
 
 /* Interactive elements animations */
 .hover-scale {
-  @apply transition-transform duration-200 ease-out;
+  @apply transition-transform duration-300 ease-out;
 }
 
 .hover-scale:hover {
@@ -210,11 +213,11 @@
 }
 
 .hover-shadow {
-  @apply transition-shadow duration-200 ease-out;
+  @apply transition-shadow duration-300 ease-out;
 }
 
 .hover-shadow:hover {
-  @apply shadow-lg;
+  @apply shadow-xl;
 }
 
 /* Animations for specific elements */
@@ -223,7 +226,7 @@
 }
 
 .card-animation:hover {
-  @apply transform -translate-y-1 shadow-lg;
+  @apply transform -translate-y-2 shadow-lg;
 }
 
 .link-animation {
@@ -232,4 +235,43 @@
 
 .link-animation:hover {
   @apply after:scale-x-100 after:origin-bottom-left;
+}
+
+/* Enhanced form element animations */
+input:focus, 
+select:focus, 
+textarea:focus,
+button:hover {
+  @apply transition-all duration-300;
+}
+
+/* Card transitions */
+.card {
+  @apply transition-all duration-300 ease-out hover:shadow-lg;
+}
+
+/* Button animations */
+button {
+  @apply transition-all duration-200;
+}
+
+button:active:not(:disabled) {
+  @apply transform scale-95;
+}
+
+.primary-button-hover {
+  @apply relative overflow-hidden;
+}
+
+.primary-button-hover::after {
+  @apply content-[''] absolute top-0 left-0 w-full h-full bg-white/20 transform scale-x-0 origin-left transition-transform duration-300;
+}
+
+.primary-button-hover:hover::after {
+  @apply scale-x-100;
+}
+
+/* Section transitions */
+section {
+  @apply transition-all duration-500;
 }
