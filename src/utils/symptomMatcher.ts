@@ -122,8 +122,6 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
     .slice(0, 6);
 };
 
-// Add the missing helper functions that ResultsDisplay.tsx is trying to import
-
 /**
  * Returns a text description based on the medical attention level
  */

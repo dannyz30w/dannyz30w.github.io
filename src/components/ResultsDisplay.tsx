@@ -7,26 +7,20 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSymptomById } from '@/data/symptoms';
-import { Condition } from '@/data/conditions';
+import { Condition } from '@/types';
 import { getMedicalAttentionText, getMedicalAttentionColor, getSeverityColor } from '@/utils/symptomMatcher';
-import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Newspaper, X, Search, Pill, AlertOctagon, Users } from 'lucide-react';
-import HealthNews from './HealthNews';
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, X, Search, Pill, AlertOctagon, Users } from 'lucide-react';
 import { Input } from "./ui/input";
+import { MatchedCondition } from '@/types';
 
 interface ResultsDisplayProps {
-  results: {
-    condition: Condition;
-    matchScore: number;
-  }[];
+  results: MatchedCondition[];
   userData: any;
   onReset: () => void;
 }
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onReset }) => {
   const [expandedCondition, setExpandedCondition] = useState<string | null>(null);
-  const [selectedNewsCondition, setSelectedNewsCondition] = useState<Condition | null>(null);
-  const [showNews, setShowNews] = useState(false);
-  const [newsSearchQuery, setNewsSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   useEffect(() => {
@@ -38,17 +32,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
 
   const toggleConditionExpanded = (conditionId: string) => {
     setExpandedCondition(prev => prev === conditionId ? null : conditionId);
-  };
-
-  const showNewsFor = (condition: Condition) => {
-    setSelectedNewsCondition(condition);
-    setShowNews(true);
-    setNewsSearchQuery(condition.name);
-    
-    // Scroll to news section
-    setTimeout(() => {
-      document.getElementById('health-news-section')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
   };
 
   // Check if the user has any medical factors that affect the analysis
@@ -146,10 +129,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
 
       <div className="space-y-6">
         {results.length > 0 ? (
-          results.map(({ condition, matchScore }, index) => {
+          results.map(({ condition, matchPercentage, matchedSymptoms, notMatchedSymptoms, score }, index) => {
             const isExpanded = expandedCondition === condition.id;
-            const matchedSymptoms = condition.symptoms.filter(s => userData.symptoms.includes(s));
-            const unmatchedSymptoms = condition.symptoms.filter(s => !userData.symptoms.includes(s));
             const familyHistoryMatch = userData.familyHistory && userData.familyHistory.some(history => 
               condition.name.toLowerCase().includes(history.toLowerCase())
             );
@@ -162,7 +143,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
               );
             
             // Apply family history bonus for UI display
-            const displayScore = Math.min(100, familyHistoryMatch ? matchScore + 5 : matchScore);
+            const displayScore = Math.min(100, familyHistoryMatch ? matchPercentage + 5 : matchPercentage);
             
             return (
               <Card key={`${condition.id}-${index}`} className={`overflow-hidden border-l-4 transition-all duration-300 ${isExpanded ? "shadow-md" : ""} ${
@@ -192,20 +173,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="hidden md:flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation(); 
-                          showNewsFor(condition);
-                        }}
-                        className="text-xs bg-white"
-                      >
-                        <Newspaper className="h-3 w-3 mr-1" />
-                        Recent News
-                      </Button>
-                    </div>
                     <div className="flex flex-col items-center">
                       <div className={`text-lg font-bold ${
                         displayScore > 75 ? "text-medical-danger" : 
@@ -248,21 +215,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                             {getMedicalAttentionText(condition.seekMedicalAttention)}
                           </Badge>
                         </div>
-                        
-                        <div className="mt-6">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={(e) => {
-                              e.stopPropagation(); 
-                              showNewsFor(condition);
-                            }}
-                            className="md:hidden text-xs"
-                          >
-                            <Newspaper className="h-3 w-3 mr-1" />
-                            See Recent News
-                          </Button>
-                        </div>
                       </TabsContent>
                       
                       <TabsContent value="symptoms" className="p-5 pt-4">
@@ -271,20 +223,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                             <h4 className="font-semibold text-gray-700 mb-2">Matching Symptoms</h4>
                             <div className="grid grid-cols-1 gap-2">
                               {matchedSymptoms.length > 0 ? (
-                                matchedSymptoms.map(symptomId => {
-                                  const symptom = getSymptomById(symptomId);
-                                  return symptom ? (
-                                    <div key={symptomId} className="flex items-start space-x-2">
-                                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                                      <div>
-                                        <span className="text-sm text-gray-700">{symptom.name}</span>
-                                        {symptom.description && (
-                                          <p className="text-xs text-gray-500">{symptom.description}</p>
-                                        )}
-                                      </div>
+                                matchedSymptoms.map(symptomName => (
+                                  <div key={symptomName} className="flex items-start space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                                    <div>
+                                      <span className="text-sm text-gray-700">{symptomName}</span>
                                     </div>
-                                  ) : null;
-                                })
+                                  </div>
+                                ))
                               ) : (
                                 <p className="text-sm text-gray-500">No matching symptoms found.</p>
                               )}
@@ -294,22 +240,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Other Common Symptoms</h4>
                             <div className="grid grid-cols-1 gap-2">
-                              {unmatchedSymptoms.length > 0 ? (
-                                unmatchedSymptoms.slice(0, 5).map(symptomId => {
-                                  const symptom = getSymptomById(symptomId);
-                                  return symptom ? (
-                                    <div key={symptomId} className="flex items-start space-x-2">
-                                      <AlertCircle className="h-4 w-4 text-gray-400 mt-0.5" />
-                                      <span className="text-sm text-gray-500">{symptom.name}</span>
-                                    </div>
-                                  ) : null;
-                                })
+                              {notMatchedSymptoms.length > 0 ? (
+                                notMatchedSymptoms.slice(0, 5).map(symptomName => (
+                                  <div key={symptomName} className="flex items-start space-x-2">
+                                    <AlertCircle className="h-4 w-4 text-gray-400 mt-0.5" />
+                                    <span className="text-sm text-gray-500">{symptomName}</span>
+                                  </div>
+                                ))
                               ) : (
                                 <p className="text-sm text-gray-500">No additional symptoms to show.</p>
                               )}
-                              {unmatchedSymptoms.length > 5 && (
+                              {notMatchedSymptoms.length > 5 && (
                                 <div className="text-sm text-gray-500 italic">
-                                  + {unmatchedSymptoms.length - 5} more symptoms
+                                  + {notMatchedSymptoms.length - 5} more symptoms
                                 </div>
                               )}
                             </div>
@@ -368,41 +311,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
         )}
       </div>
 
-      {showNews && (
-        <div id="health-news-section" className="mt-10">
-          <Card>
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-medical-text">
-                    Health News: {selectedNewsCondition?.name}
-                  </h3>
-                  <Button variant="ghost" size="sm" onClick={() => setShowNews(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search health topics..."
-                    value={newsSearchQuery}
-                    onChange={(e) => setNewsSearchQuery(e.target.value)}
-                    className="pl-10 bg-white"
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4">
-              <HealthNews condition={newsSearchQuery || selectedNewsCondition?.name || ''} />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       <div className="mt-8 flex justify-center">
         <Button
           onClick={onReset}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-2"
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-2 transform hover:scale-105 transition-all duration-200"
         >
           Start New Analysis
         </Button>

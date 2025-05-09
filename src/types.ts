@@ -4,6 +4,7 @@ export interface Symptom {
   name: string;
   description?: string;
   bodyPart?: string;
+  category?: string;
 }
 
 export interface Condition {
@@ -37,10 +38,16 @@ export interface MatchedCondition {
 export interface UserData {
   age: string;
   gender: string;
+  location?: string;
   symptoms: string[];
   duration: number;
   familyHistory: string[];
   pastMedicalConditions: string[];
   medications: string[];
   allergies: string[];
+  weight?: string;
+  weightUnit?: string;
+  height?: string;
+  heightUnit?: string;
+  additionalInfo?: string;
 }
