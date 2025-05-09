@@ -4,7 +4,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SymptomChecker from '@/components/SymptomChecker';
 import MedicalDisclaimer from '@/components/MedicalDisclaimer';
-import NewsSection from '@/components/NewsSection';
 
 const Index = () => {
   return (
@@ -28,10 +27,6 @@ const Index = () => {
         
         <section className="mt-12 animate-fade-in">
           <SymptomChecker />
-        </section>
-        
-        <section id="news" className="mt-20 px-6 py-12 bg-white dark:bg-gray-800/50 rounded-xl shadow-lg animate-fade-in">
-          <NewsSection />
         </section>
         
         <section id="about" className="mt-16 px-6 py-12 bg-white dark:bg-gray-800/50 rounded-xl shadow-lg animate-fade-in">
