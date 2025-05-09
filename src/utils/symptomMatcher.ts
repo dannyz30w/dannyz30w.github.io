@@ -1,3 +1,4 @@
+
 import { Condition, MatchedCondition, UserData } from "@/types";
 import { getSymptomById } from "@/data/symptoms";
 
@@ -84,7 +85,7 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
       if (condition.medicationConsiderations && userData.medications.length > 0) {
         let medicationEffect = 0;
         condition.medicationConsiderations.forEach(med => {
-          if (userData.medications.some(userMed => userMed.toLowerCase().includes(med.toLowerCase()))) {
+          if (userData.medications.some(userMed => userMed.toLowerCase().includes(med.name.toLowerCase()))) {
             medicationEffect += med.effect === 'positive' ? WEIGHT_FACTORS.MEDICATIONS : -WEIGHT_FACTORS.MEDICATIONS;
           }
         });
@@ -119,4 +120,58 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
     .filter(match => match.matchPercentage > 15)
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
+};
+
+// Add the missing helper functions that ResultsDisplay.tsx is trying to import
+
+/**
+ * Returns a text description based on the medical attention level
+ */
+export const getMedicalAttentionText = (level: 'immediately' | 'soon' | 'if worsens' | 'self-manageable'): string => {
+  switch (level) {
+    case 'immediately':
+      return 'Seek Medical Attention Immediately';
+    case 'soon':
+      return 'Seek Medical Attention Soon';
+    case 'if worsens':
+      return 'Seek Medical Attention If Symptoms Worsen';
+    case 'self-manageable':
+      return 'Self-Manageable Condition';
+    default:
+      return 'Consult with a Healthcare Provider';
+  }
+};
+
+/**
+ * Returns the appropriate color class based on the medical attention level
+ */
+export const getMedicalAttentionColor = (level: 'immediately' | 'soon' | 'if worsens' | 'self-manageable'): string => {
+  switch (level) {
+    case 'immediately':
+      return 'bg-red-600';
+    case 'soon':
+      return 'bg-orange-500';
+    case 'if worsens':
+      return 'bg-yellow-500';
+    case 'self-manageable':
+      return 'bg-green-500';
+    default:
+      return 'bg-blue-500';
+  }
+};
+
+/**
+ * Returns the appropriate color class based on condition severity
+ */
+export const getSeverityColor = (severity: 'mild' | 'moderate' | 'severe'): string => {
+  switch (severity) {
+    case 'mild':
+      return 'bg-green-100 text-green-700';
+    case 'moderate':
+      return 'bg-yellow-100 text-yellow-700';
+    case 'severe':
+      return 'bg-red-100 text-red-700';
+    default:
+      return 'bg-gray-100 text-gray-700';
+  }
 };
