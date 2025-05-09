@@ -7,21 +7,21 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSymptomById } from '@/data/symptoms';
-import { Condition } from '@/types';
 import { getMedicalAttentionText, getMedicalAttentionColor, getSeverityColor } from '@/utils/symptomMatcher';
-import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, X, Search, Pill, AlertOctagon, Users } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, X, Search, Pill, AlertOctagon, Users, Clock } from 'lucide-react';
 import { Input } from "./ui/input";
-import { MatchedCondition } from '@/types';
+import { MatchedCondition, UserData } from '@/types';
 
 interface ResultsDisplayProps {
   results: MatchedCondition[];
-  userData: any;
+  userData: UserData;
   onReset: () => void;
 }
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onReset }) => {
   const [expandedCondition, setExpandedCondition] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     // If there are results, expand the first one by default
@@ -34,11 +34,34 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
     setExpandedCondition(prev => prev === conditionId ? null : conditionId);
   };
 
+  // Filtered results based on search term
+  const filteredResults = searchTerm.trim() === "" 
+    ? results 
+    : results.filter(result => 
+        result.condition.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.matchedSymptoms.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+
   // Check if the user has any medical factors that affect the analysis
   const hasMedicalFactors = userData.medications?.length > 0 || 
                            userData.allergies?.length > 0 || 
                            userData.pastMedicalConditions?.length > 0 || 
                            userData.familyHistory?.length > 0;
+
+  // Format duration text from userData
+  const getDurationText = () => {
+    if (!userData.duration) return "Not specified";
+    
+    if (userData.duration < 7) {
+      return `${userData.duration} day${userData.duration !== 1 ? 's' : ''}`;
+    } else if (userData.duration < 30) {
+      const weeks = Math.floor(userData.duration / 7);
+      return `${weeks} week${weeks !== 1 ? 's' : ''}`;
+    } else {
+      const months = Math.floor(userData.duration / 30);
+      return `${months} month${months !== 1 ? 's' : ''}`;
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
@@ -55,6 +78,38 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
           Always consult with a qualified healthcare provider for proper diagnosis and treatment.
         </AlertDescription>
       </Alert>
+
+      {/* User Profile Summary Card */}
+      <Card className="mb-6 border-medical-light/50 shadow-sm overflow-hidden">
+        <div className="bg-medical-light/10 p-4 border-b border-medical-light/30">
+          <h3 className="font-medium text-medical-text flex items-center gap-2">
+            <Users className="h-4 w-4" /> Patient Profile Summary
+          </h3>
+        </div>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500">Age</p>
+              <p className="font-medium">{userData.age || "Not specified"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500">Gender</p>
+              <p className="font-medium">{userData.gender ? userData.gender.charAt(0).toUpperCase() + userData.gender.slice(1) : "Not specified"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500">Duration of Symptoms</p>
+              <p className="font-medium flex items-center gap-1">
+                <Clock className="h-3 w-3 text-medical-text" />
+                {getDurationText()}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500">Reported Symptoms</p>
+              <p className="font-medium">{userData.symptoms.length}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {hasMedicalFactors && (
         <div className="mb-6 bg-white rounded-lg shadow p-5 border-l-4 border-l-medical-text">
@@ -127,9 +182,35 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
         </div>
       )}
 
+      {/* Results search and filter bar */}
+      {results.length > 2 && (
+        <div className="flex items-center gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input 
+              placeholder="Search conditions or symptoms..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 border-gray-300 focus:border-medical-text"
+            />
+          </div>
+          {searchTerm && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setSearchTerm("")}
+              className="h-10"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+          )}
+        </div>
+      )}
+
       <div className="space-y-6">
-        {results.length > 0 ? (
-          results.map(({ condition, matchPercentage, matchedSymptoms, notMatchedSymptoms, score }, index) => {
+        {filteredResults.length > 0 ? (
+          filteredResults.map(({ condition, matchPercentage, matchedSymptoms, notMatchedSymptoms, score }, index) => {
             const isExpanded = expandedCondition === condition.id;
             const familyHistoryMatch = userData.familyHistory && userData.familyHistory.some(history => 
               condition.name.toLowerCase().includes(history.toLowerCase())
@@ -146,11 +227,20 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
             const displayScore = Math.min(100, familyHistoryMatch ? matchPercentage + 5 : matchPercentage);
             
             return (
-              <Card key={`${condition.id}-${index}`} className={`overflow-hidden border-l-4 transition-all duration-300 ${isExpanded ? "shadow-md" : ""} ${
-                displayScore > 75 ? "border-l-medical-danger" : displayScore > 50 ? "border-l-medical-warning" : "border-l-medical"
-              }`}>
+              <Card 
+                key={`${condition.id}-${index}`} 
+                className={`overflow-hidden border-l-4 transition-all duration-300 hover:shadow-md ${
+                  isExpanded ? "shadow-md" : ""
+                } ${
+                  displayScore > 75 ? "border-l-medical-danger" : 
+                  displayScore > 50 ? "border-l-medical-warning" : 
+                  "border-l-medical"
+                }`}
+              >
                 <div 
-                  className={`p-4 flex justify-between items-center cursor-pointer ${isExpanded ? "bg-gray-50" : ""}`}
+                  className={`p-4 flex justify-between items-center cursor-pointer ${
+                    isExpanded ? "bg-gray-50" : ""
+                  } hover:bg-gray-50/80 transition-colors duration-200`}
                   onClick={() => toggleConditionExpanded(condition.id)}
                 >
                   <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
@@ -215,6 +305,46 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                             {getMedicalAttentionText(condition.seekMedicalAttention)}
                           </Badge>
                         </div>
+
+                        {condition.ageRange && (
+                          <div className="mt-4">
+                            <h4 className="font-semibold text-gray-700 mb-2">Typical Age Range</h4>
+                            <p className="text-sm">
+                              This condition typically affects people between <span className="font-medium">{condition.ageRange.min}</span> and <span className="font-medium">{condition.ageRange.max}</span> years old.
+                              {userData.age && !isNaN(Number(userData.age)) && (
+                                <span className={`ml-2 ${
+                                  Number(userData.age) >= condition.ageRange.min && Number(userData.age) <= condition.ageRange.max
+                                    ? "text-green-600 font-medium"
+                                    : "text-gray-500"
+                                }`}>
+                                  {Number(userData.age) >= condition.ageRange.min && Number(userData.age) <= condition.ageRange.max
+                                    ? "(Your age is within this range)"
+                                    : "(Your age is outside this range)"}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+
+                        {condition.gender && condition.gender !== 'any' && (
+                          <div className="mt-4">
+                            <h4 className="font-semibold text-gray-700 mb-2">Gender Consideration</h4>
+                            <p className="text-sm">
+                              This condition primarily affects {condition.gender === 'male' ? 'males' : 'females'}.
+                              {userData.gender && (
+                                <span className={`ml-2 ${
+                                  userData.gender === condition.gender
+                                    ? "text-green-600 font-medium"
+                                    : "text-gray-500"
+                                }`}>
+                                  {userData.gender === condition.gender
+                                    ? "(Relevant to your gender)"
+                                    : "(Less common for your gender)"}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        )}
                       </TabsContent>
                       
                       <TabsContent value="symptoms" className="p-5 pt-4">
@@ -258,6 +388,28 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                             </div>
                           </div>
                         </div>
+
+                        {condition.typicalDuration && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h4 className="font-semibold text-gray-700 mb-2">Typical Duration</h4>
+                            <p className="text-sm text-gray-600">
+                              This condition typically lasts for about {condition.typicalDuration} days.
+                              {userData.duration > 0 && (
+                                <span className={`ml-2 ${
+                                  Math.abs(userData.duration - condition.typicalDuration) <= 7
+                                    ? "text-green-600 font-medium"
+                                    : "text-gray-500"
+                                }`}>
+                                  {Math.abs(userData.duration - condition.typicalDuration) <= 7
+                                    ? "(Similar to your reported duration)"
+                                    : userData.duration < condition.typicalDuration
+                                      ? "(Your symptoms are more recent than typical)"
+                                      : "(Your symptoms have lasted longer than typical)"}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        )}
                       </TabsContent>
                       
                       <TabsContent value="management" className="p-5 pt-4">
@@ -270,6 +422,44 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, userData, onRe
                           </ul>
                         ) : (
                           <p className="text-sm text-gray-500">No specific prevention tips available for this condition.</p>
+                        )}
+                        
+                        {/* Related medications section */}
+                        {condition.medicationConsiderations && condition.medicationConsiderations.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h4 className="font-semibold text-gray-700 mb-2">Medication Considerations</h4>
+                            <div className="space-y-2">
+                              {condition.medicationConsiderations.map((med, idx) => {
+                                const userHasMed = userData.medications?.some(m => 
+                                  m.toLowerCase().includes(med.name.toLowerCase()) || 
+                                  med.name.toLowerCase().includes(m.toLowerCase())
+                                );
+                                
+                                return (
+                                  <div key={idx} className={`p-2 rounded-md text-sm ${
+                                    userHasMed ? "bg-blue-50 border border-blue-100" : "bg-gray-50 border border-gray-100"
+                                  }`}>
+                                    <div className="flex items-start">
+                                      <Pill className={`h-4 w-4 mt-0.5 mr-2 ${userHasMed ? "text-blue-500" : "text-gray-400"}`} />
+                                      <div>
+                                        <span className={`font-medium ${userHasMed ? "text-blue-700" : "text-gray-700"}`}>
+                                          {med.name}
+                                        </span>
+                                        <span className={`ml-2 ${
+                                          med.effect === 'positive' ? "text-green-600" : "text-amber-600"
+                                        }`}>
+                                          ({med.effect === 'positive' ? "May help" : "May worsen symptoms"})
+                                        </span>
+                                        {userHasMed && (
+                                          <p className="text-xs text-blue-600 mt-1">You reported taking this or a similar medication</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
                         )}
                         
                         {/* Add medical attention info again on this tab */}

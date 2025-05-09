@@ -1,9 +1,8 @@
-
 import { Condition, MatchedCondition, UserData } from "@/types";
 import { getSymptomById } from "@/data/symptoms";
 
 export const matchConditions = (userData: UserData, conditions: Condition[]): MatchedCondition[] => {
-  // Weight factors for different attributes
+  // Weight factors for different attributes - adjusted for better balance
   const WEIGHT_FACTORS = {
     AGE: 1.5,
     GENDER: 1.5,
@@ -21,7 +20,7 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
       let matchedSymptoms: string[] = [];
       let notMatchedSymptoms: string[] = [];
       
-      // Check symptoms
+      // Check symptoms - core calculation
       condition.symptoms.forEach(symptomId => {
         if (userData.symptoms.includes(symptomId)) {
           score += WEIGHT_FACTORS.SYMPTOMS;
@@ -31,24 +30,26 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
         }
       });
       
-      // Age considerations
-      if (condition.ageRange) {
+      // Age considerations - improved handling
+      if (condition.ageRange && userData.age) {
         const age = Number(userData.age);
-        if (age >= condition.ageRange.min && age <= condition.ageRange.max) {
-          score += WEIGHT_FACTORS.AGE;
-        } else {
-          // Reduce score if age is outside but close to the range
-          const minDiff = Math.abs(age - condition.ageRange.min);
-          const maxDiff = Math.abs(age - condition.ageRange.max);
-          const closestDiff = Math.min(minDiff, maxDiff);
-          
-          if (closestDiff <= 5) {
-            score += WEIGHT_FACTORS.AGE * (1 - closestDiff / 10);
+        if (!isNaN(age)) { // Make sure age is a valid number
+          if (age >= condition.ageRange.min && age <= condition.ageRange.max) {
+            score += WEIGHT_FACTORS.AGE;
+          } else {
+            // Reduce score if age is outside but close to the range
+            const minDiff = Math.abs(age - condition.ageRange.min);
+            const maxDiff = Math.abs(age - condition.ageRange.max);
+            const closestDiff = Math.min(minDiff, maxDiff);
+            
+            if (closestDiff <= 5) {
+              score += WEIGHT_FACTORS.AGE * (1 - closestDiff / 10);
+            }
           }
         }
       }
       
-      // Gender considerations
+      // Gender considerations - improved handling
       if (condition.gender && userData.gender) {
         if (condition.gender === 'any' || condition.gender === userData.gender) {
           score += WEIGHT_FACTORS.GENDER;
@@ -63,51 +64,84 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
         score += WEIGHT_FACTORS.DURATION * durationRatio;
       }
       
-      // Family history
+      // Family history - improved relevance calculation
       if (condition.familyHistoryFactors && userData.familyHistory.length > 0) {
+        // Count matches for better accuracy
+        let familyMatchCount = 0;
         condition.familyHistoryFactors.forEach(factor => {
           if (userData.familyHistory.includes(factor)) {
-            score += WEIGHT_FACTORS.FAMILY_HISTORY;
+            familyMatchCount++;
           }
         });
+        
+        // Apply a scaled score based on match count
+        if (familyMatchCount > 0) {
+          const familyFactorRatio = familyMatchCount / condition.familyHistoryFactors.length;
+          score += WEIGHT_FACTORS.FAMILY_HISTORY * familyFactorRatio * 1.5; // Slightly boost family history factor
+        }
       }
       
-      // Past medical conditions
+      // Past medical conditions - improved relevance
       if (condition.relatedConditions && userData.pastMedicalConditions.length > 0) {
-        condition.relatedConditions.forEach(related => {
-          if (userData.pastMedicalConditions.includes(related)) {
-            score += WEIGHT_FACTORS.PAST_CONDITIONS;
-          }
-        });
+        const relevantConditions = condition.relatedConditions.filter(related => 
+          userData.pastMedicalConditions.includes(related)
+        );
+        
+        if (relevantConditions.length > 0) {
+          // Apply scaled score based on match count
+          const conditionRatio = relevantConditions.length / condition.relatedConditions.length;
+          score += WEIGHT_FACTORS.PAST_CONDITIONS * conditionRatio * 1.2; // Slight boost
+        }
       }
       
-      // Medications that might affect symptoms
+      // Medications that might affect symptoms - improved handling
       if (condition.medicationConsiderations && userData.medications.length > 0) {
         let medicationEffect = 0;
+        let matchesFound = false;
+        
         condition.medicationConsiderations.forEach(med => {
-          if (userData.medications.some(userMed => userMed.toLowerCase().includes(med.name.toLowerCase()))) {
-            medicationEffect += med.effect === 'positive' ? WEIGHT_FACTORS.MEDICATIONS : -WEIGHT_FACTORS.MEDICATIONS;
+          // More flexible matching by looking for partial matches
+          const matchingMed = userData.medications.find(userMed => 
+            userMed.toLowerCase().includes(med.name.toLowerCase()) ||
+            med.name.toLowerCase().includes(userMed.toLowerCase())
+          );
+          
+          if (matchingMed) {
+            matchesFound = true;
+            medicationEffect += med.effect === 'positive' ? 
+              WEIGHT_FACTORS.MEDICATIONS : -WEIGHT_FACTORS.MEDICATIONS;
           }
         });
-        score += medicationEffect;
+        
+        if (matchesFound) {
+          score += medicationEffect;
+        }
       }
       
-      // Allergies that might be relevant
+      // Allergies that might be relevant - improved handling
       if (condition.allergyConsiderations && userData.allergies.length > 0) {
-        condition.allergyConsiderations.forEach(allergy => {
-          if (userData.allergies.includes(allergy)) {
-            score += WEIGHT_FACTORS.ALLERGIES;
-          }
-        });
+        const relevantAllergies = condition.allergyConsiderations.filter(allergy => 
+          userData.allergies.includes(allergy)
+        );
+        
+        if (relevantAllergies.length > 0) {
+          // Apply scaled score based on match count
+          score += WEIGHT_FACTORS.ALLERGIES * (relevantAllergies.length / condition.allergyConsiderations.length);
+        }
       }
       
-      // Calculate match percentage
-      const maxPossibleScore = condition.symptoms.length * WEIGHT_FACTORS.SYMPTOMS + 
-                              WEIGHT_FACTORS.AGE + 
-                              WEIGHT_FACTORS.GENDER +
-                              WEIGHT_FACTORS.DURATION;
+      // Calculate match percentage with better balancing
+      // Base score on symptoms + a weighted portion of other factors
+      const symptomsMaxScore = condition.symptoms.length * WEIGHT_FACTORS.SYMPTOMS;
+      const otherFactorsMaxScore = WEIGHT_FACTORS.AGE + WEIGHT_FACTORS.GENDER + WEIGHT_FACTORS.DURATION +
+                                  (condition.familyHistoryFactors?.length || 0) * WEIGHT_FACTORS.FAMILY_HISTORY +
+                                  (condition.relatedConditions?.length || 0) * WEIGHT_FACTORS.PAST_CONDITIONS;
+                                  
+      // Weight symptoms more heavily but still consider other factors
+      const maxPossibleScore = symptomsMaxScore + (otherFactorsMaxScore * 0.6);
       
-      const matchPercentage = Math.min(Math.round((score / maxPossibleScore) * 100), 100);
+      // Calculate match percentage and ensure it's between 0-100
+      const matchPercentage = Math.min(Math.max(Math.round((score / maxPossibleScore) * 100), 0), 100);
       
       return {
         condition,
@@ -117,9 +151,9 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
         score
       };
     })
-    .filter(match => match.matchPercentage > 15)
+    .filter(match => match.matchPercentage > 10) // Lower threshold slightly to show more potential matches
     .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
+    .slice(0, 6); // Show top 6 matches
 };
 
 /**

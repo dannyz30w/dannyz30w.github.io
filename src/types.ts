@@ -46,8 +46,9 @@ export interface UserData {
   medications: string[];
   allergies: string[];
   weight?: string;
-  weightUnit?: string;
+  weightUnit?: 'kg' | 'lb';
   height?: string;
-  heightUnit?: string;
+  heightUnit?: 'cm' | 'in';
   additionalInfo?: string;
+  bmi?: number; // Calculated BMI based on height and weight
 }
