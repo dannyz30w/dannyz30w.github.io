@@ -33,6 +33,7 @@ export interface MatchedCondition {
   matchedSymptoms: string[];
   notMatchedSymptoms: string[];
   score: number;
+  evidenceFactors?: string[]; // New: Clinical evidence supporting the match
 }
 
 export interface UserData {
