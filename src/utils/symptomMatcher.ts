@@ -150,6 +150,88 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
         }
       }
 
+      // BMI and anthropometric analysis (evidence-based weight factors)
+      if (userData.bmi && userData.bmi > 0) {
+        const bmi = userData.bmi;
+        
+        // Obesity-related conditions (BMI > 30)
+        const obesityRelatedConditions = [
+          'diabetes_type_2', 'hypertension', 'sleep_apnea', 'heart_disease', 
+          'stroke', 'metabolic_syndrome', 'fatty_liver_disease', 'osteoarthritis'
+        ];
+        
+        // Underweight-related conditions (BMI < 18.5)
+        const underweightRelatedConditions = [
+          'malnutrition', 'anemia', 'osteoporosis', 'immune_deficiency',
+          'eating_disorders', 'thyroid_disorders'
+        ];
+        
+        if (bmi >= 30 && obesityRelatedConditions.includes(condition.id)) {
+          // High BMI increases risk for obesity-related conditions
+          const obesityRiskFactor = Math.min((bmi - 30) / 10, 2.0); // Max 2x multiplier
+          bayesianScore += EVIDENCE_WEIGHTS.AGE_EXACT_MATCH * (1 + obesityRiskFactor);
+          evidenceFactors.push(`High BMI risk factor (${bmi.toFixed(1)})`);
+        } else if (bmi < 18.5 && underweightRelatedConditions.includes(condition.id)) {
+          // Low BMI increases risk for underweight-related conditions
+          const underweightRiskFactor = Math.min((18.5 - bmi) / 5, 1.5); // Max 1.5x multiplier
+          bayesianScore += EVIDENCE_WEIGHTS.AGE_EXACT_MATCH * (1 + underweightRiskFactor);
+          evidenceFactors.push(`Low BMI risk factor (${bmi.toFixed(1)})`);
+        }
+        
+        // Normal BMI protective factor for obesity-related conditions
+        if (bmi >= 18.5 && bmi < 25 && obesityRelatedConditions.includes(condition.id)) {
+          bayesianScore *= 0.8; // 20% reduction for normal BMI
+          evidenceFactors.push(`Protective normal BMI (${bmi.toFixed(1)})`);
+        }
+      }
+
+      // Medication interaction analysis (evidence-based drug effects)
+      if (userData.medications.length > 0 && condition.medicationConsiderations?.length) {
+        let medicationScore = 0;
+        let medicationFactors = 0;
+        
+        condition.medicationConsiderations.forEach(medConsideration => {
+          const isUserTaking = userData.medications.some(userMed => 
+            userMed.toLowerCase().includes(medConsideration.name.toLowerCase()) ||
+            medConsideration.name.toLowerCase().includes(userMed.toLowerCase())
+          );
+          
+          if (isUserTaking) {
+            if (medConsideration.effect === 'positive') {
+              // Medication reduces risk or treats condition
+              medicationScore -= EVIDENCE_WEIGHTS.MEDICATION_EFFECT;
+              medicationFactors++;
+            } else if (medConsideration.effect === 'negative') {
+              // Medication increases risk or causes condition
+              medicationScore += EVIDENCE_WEIGHTS.MEDICATION_EFFECT * 1.5;
+              medicationFactors++;
+            }
+          }
+        });
+        
+        if (medicationFactors > 0) {
+          bayesianScore += medicationScore;
+          evidenceFactors.push(`Medication interactions (${medicationFactors} factors)`);
+        }
+      }
+
+      // Allergy consideration analysis
+      if (userData.allergies.length > 0 && condition.allergyConsiderations?.length) {
+        const allergyMatches = condition.allergyConsiderations.filter(allergen =>
+          userData.allergies.some(userAllergy => 
+            userAllergy.toLowerCase().includes(allergen.toLowerCase()) ||
+            allergen.toLowerCase().includes(userAllergy.toLowerCase())
+          )
+        ).length;
+        
+        if (allergyMatches > 0) {
+          // Allergies can increase likelihood of allergic conditions
+          const allergyScore = (allergyMatches / condition.allergyConsiderations.length);
+          bayesianScore += EVIDENCE_WEIGHTS.ALLERGY_RELEVANCE * allergyScore * 2.0;
+          evidenceFactors.push(`Allergy predisposition (${allergyMatches} factors)`);
+        }
+      }
+
       // Bayesian probability calculation
       let maxPossibleScore = totalSymptoms * EVIDENCE_WEIGHTS.SYMPTOM_MATCH * specificityMultiplier;
       if (totalSymptoms >= 3) maxPossibleScore += EVIDENCE_WEIGHTS.SYMPTOM_SPECIFICITY;
@@ -181,30 +263,30 @@ export const matchConditions = (userData: UserData, conditions: Condition[]): Ma
     .slice(0, 8);
 };
 
-export const getMedicalAttentionText = (level: 'immediately' | 'soon' | 'if worsens' | 'self-manageable'): string => {
+export const getMedicalAttentionText = (level: 'immediately' | 'within24Hours' | 'withinWeek' | 'selfCare'): string => {
   switch (level) {
     case 'immediately':
       return 'Seek Medical Attention Immediately';
-    case 'soon':
-      return 'Seek Medical Attention Soon';
-    case 'if worsens':
-      return 'Monitor - Seek Care If Symptoms Worsen';
-    case 'self-manageable':
-      return 'Self-Manageable with Monitoring';
+    case 'within24Hours':
+      return 'Seek Medical Attention Within 24 Hours';
+    case 'withinWeek':
+      return 'Seek Medical Attention Within a Week';
+    case 'selfCare':
+      return 'Self-Care with Monitoring';
     default:
       return 'Consult Healthcare Provider';
   }
 };
 
-export const getMedicalAttentionColor = (level: 'immediately' | 'soon' | 'if worsens' | 'self-manageable'): string => {
+export const getMedicalAttentionColor = (level: 'immediately' | 'within24Hours' | 'withinWeek' | 'selfCare'): string => {
   switch (level) {
     case 'immediately':
       return 'bg-red-600';
-    case 'soon':
+    case 'within24Hours':
       return 'bg-orange-500';
-    case 'if worsens':
+    case 'withinWeek':
       return 'bg-yellow-500';
-    case 'self-manageable':
+    case 'selfCare':
       return 'bg-green-500';
     default:
       return 'bg-blue-500';

@@ -82,6 +82,7 @@ export const symptoms: Symptom[] = [
   { id: 'labored_breathing', name: 'Labored breathing', category: 'respiratory', description: 'Breathing that requires effort' },
   { id: 'shallow_breathing', name: 'Shallow breathing', category: 'respiratory', description: 'Breathing that doesn\'t fill the lungs completely' },
   { id: 'chest_congestion', name: 'Chest congestion', category: 'respiratory', description: 'Mucus buildup in the chest' },
+  { id: 'frequent_respiratory_infections', name: 'Frequent Respiratory Infections', category: 'respiratory', description: 'Repeated episodes of respiratory tract infections' },
   
   // Cardiovascular symptoms
   { id: 'chest_pain', name: 'Chest pain', category: 'cardiovascular', description: 'Discomfort in the chest area' },

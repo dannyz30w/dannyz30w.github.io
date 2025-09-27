@@ -5,6 +5,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Medical Theme Design System - Evidence-Based Color Psychology */
+
 @layer base {
   :root {
     --background: 210 50% 98%;
